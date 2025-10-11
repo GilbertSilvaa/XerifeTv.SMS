@@ -1,0 +1,26 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.dotcover
+
+# configuração local de desenvolvimento (não commitar)
+appsettings.Development.json
+appsettings.development.json
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# IDEs
+.idea/
+*.code-workspace
+
+# outros
+*.log
+.env
+.env.local
