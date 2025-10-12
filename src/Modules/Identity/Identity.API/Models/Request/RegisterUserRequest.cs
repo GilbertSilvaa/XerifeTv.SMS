@@ -1,4 +1,4 @@
-﻿using Identity.API.Enums;
+﻿using Identity.Application.Enums;
 
 namespace Identity.API.Models.Request;
 

@@ -1,5 +1,6 @@
 using BuildingBlocks;
 using Identity.API;
+using Identity.Application;
 using Identity.Infrastructure;
 using Microsoft.OpenApi.Models;
 using Plans.API;
@@ -17,7 +18,8 @@ internal class Program
 			.AddBuildingBlocks(builder.Configuration)
 			.AddModulePlanInfrastructure(builder.Configuration)
 			.AddModulePlanApplication()
-			.AddModuleIdentityInfrastructure(builder.Configuration);
+			.AddModuleIdentityInfrastructure(builder.Configuration)
+			.AddModuleIdentityApplication();
 
 		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 		builder.Services.AddEndpointsApiExplorer();

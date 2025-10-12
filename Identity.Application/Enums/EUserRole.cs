@@ -1,4 +1,4 @@
-﻿namespace Identity.API.Enums;
+﻿namespace Identity.Application.Enums;
 
 public enum EUserRole
 {

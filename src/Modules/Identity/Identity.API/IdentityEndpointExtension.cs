@@ -1,11 +1,12 @@
 ﻿using Identity.API.Models.Request;
-using Identity.Infrastructure;
+using Identity.Application.Commands.LoginUser;
+using Identity.Application.Commands.RegisterUser;
+using Mapster;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 
 namespace Identity.API;
 
@@ -16,28 +17,16 @@ public static class IdentityEndpointExtension
 		var group = endpoints.MapGroup("/users");
 
 		group.MapPost("/register", [Authorize(Roles = "ADM")]
-		async (
-			RegisterUserRequest request,
-			UserManager<IdentityUser> userManager,
-			RoleManager<IdentityRole> roleManager) =>
+		async (RegisterUserRequest request, IMediator mediator) =>
 		{
-			IdentityUser user = new()
-			{
-				UserName = request.UserName,
-				Email = request.Email
-			};
+			var command = request.Adapt<RegisterUserCommand>();
+			var response = await mediator.Send(command);
 
-			var response = await userManager.CreateAsync(user, request.Password);
-
-			if (!response.Succeeded)
-				return Results.BadRequest(response.Errors.Select(e => e.Description));
-
-			if (!await roleManager.RoleExistsAsync(request.Role.ToString()))
-				await roleManager.CreateAsync(new IdentityRole(request.Role.ToString()));
-
-			await userManager.AddToRoleAsync(user, request.Role.ToString());
+			if (response.IsFailure)
+				return Results.BadRequest(response.Error.Description);
 
 			return Results.Created();
+
 		})
 			.WithName("RegisterUser")
 			.WithTags("Users")
@@ -47,37 +36,18 @@ public static class IdentityEndpointExtension
 			.Produces<string>(StatusCodes.Status400BadRequest);
 
 		group.MapPost("/login",
-		async (
-			LoginUserRequest request,
-			SignInManager<IdentityUser> signInManager,
-			UserManager<IdentityUser> userManager,
-			IConfiguration configuration) =>
+		async (LoginUserRequest request, IMediator mediator) =>
 		{
+			var command = request.Adapt<LoginUserCommand>();
+			var response = await mediator.Send(command);
 
-			var user = await userManager.FindByNameAsync(request.UserName);
-			if (user == null) return Results.Unauthorized();
-
-			var response = await signInManager.CheckPasswordSignInAsync(
-				user,
-				request.Password,
-				lockoutOnFailure: true);
-
-			if (!response.Succeeded)
+			if (response.IsFailure)
 				return Results.Unauthorized();
-
-			var roles = await userManager.GetRolesAsync(user);
-
-			JwtTokenService jwtTokenService = new(configuration);
-			_ = int.TryParse(configuration["Jwt:ExpirationTimeInMinutes"], out int expireTimeInMinutes);
-			_ = int.TryParse(configuration["Jwt:RefreshExpirationTimeInMinutes"], out int refreshExpirationTimeInMinutes);
-
-			string token = jwtTokenService.GenerateToken(user, roles, expireTimeInMinutes);
-			string refreshToken = jwtTokenService.GenerateToken(user, roles, refreshExpirationTimeInMinutes);
 
 			return Results.Ok(new
 			{
-				acessToken = token,
-				refreshAccessToken = refreshToken,
+				acessToken = response.Data!.Token,
+				refreshAccessToken = response.Data!.RefreshToken
 			});
 		})
 			.WithName("LoginUser")
