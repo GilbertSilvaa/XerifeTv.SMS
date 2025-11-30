@@ -1,6 +1,9 @@
 ﻿using BuildingBlocks.Behaviors;
 using BuildingBlocks.Core.Messaging;
+using BuildingBlocks.Core.Outbox;
 using BuildingBlocks.Infrastructure.Messaging;
+using BuildingBlocks.Infrastructure.Outbox.Persistence;
+using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,12 +33,21 @@ public static class ServiceCollectionExtensions
 	private static IServiceCollection AddBuildingBlocksInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddScoped<IDomainEventPublisher, MediaRDomainEventPublisher>();
-		services.AddScoped<IIntegrationEventPublisher, MediaRIntegrationEventPublisher>();
+		services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
+		services.AddScoped<IOutboxRepository, OutboxRepository>();
 
 		services.AddStackExchangeRedisCache(options =>
 		{
 			options.Configuration = configuration["Redis:Connection"];
 			options.InstanceName = configuration["Redis:InstanceName"];
+		});
+
+		services.AddDbContextFactory<OutboxDbContext>((serviceProvider, options) =>
+		{
+			options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
+			{
+				npgsqlOptions.MigrationsAssembly(typeof(OutboxDbContext).Assembly.FullName);
+			});
 		});
 
 		return services;

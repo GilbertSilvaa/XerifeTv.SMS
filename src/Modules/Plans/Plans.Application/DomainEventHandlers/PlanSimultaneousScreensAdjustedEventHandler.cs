@@ -17,6 +17,6 @@ internal sealed class PlanSimultaneousScreensAdjustedEventHandler : IDomainEvent
 	public async Task Handle(DomainEventNotification<PlanSimultaneousScreensAjustedDomainEvent> notification, CancellationToken cancellationToken)
 	{
 		var integrationEvent = new PlanScreensAdjustedIntegrationEvent(notification.DomainEvent.Id, notification.DomainEvent.NewMaxSimultaneousScreens);
-		await _publisher.PublishAsync(integrationEvent, cancellationToken);
+		await _publisher.PublishAsync(integrationEvent, "plans.updated", cancellationToken);
 	}
 }

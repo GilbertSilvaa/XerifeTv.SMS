@@ -5,11 +5,11 @@ namespace BuildingBlocks.Infrastructure.Database;
 
 public class ApplicationDbContext : DbContext
 {
-	private readonly IDomainEventPublisher _eventPublisher;
+	private readonly IDomainEventPublisher _domainEventPublisher;
 
 	public ApplicationDbContext(DbContextOptions options, IDomainEventPublisher eventPublisher) : base(options)
 	{
-		_eventPublisher = eventPublisher;
+		_domainEventPublisher = eventPublisher;
 	}
 
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -29,7 +29,7 @@ public class ApplicationDbContext : DbContext
 
 		var tasks = entitiesWithEvents
 			.SelectMany(e => e.DomainEvents)
-			.Select(domainEvent => _eventPublisher.PublishAsync(domainEvent, cancellationToken));
+			.Select(domainEvent => _domainEventPublisher.PublishAsync(domainEvent, cancellationToken));
 
 		await Task.WhenAll(tasks);
 
