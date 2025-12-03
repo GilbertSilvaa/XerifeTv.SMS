@@ -24,6 +24,8 @@ public class PlanDbContext : ApplicationDbContext
 	{
 		modelBuilder.ApplyConfiguration(new PlanConfiguration());
 		base.OnModelCreating(modelBuilder);
+
+		modelBuilder.Entity<Plan>().HasQueryFilter(p => !p.IsDeleted);
 	}
 
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
