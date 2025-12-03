@@ -2,6 +2,7 @@
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Outbox;
 using BuildingBlocks.Infrastructure.Messaging;
+using BuildingBlocks.Infrastructure.Messaging.RabbitMQ;
 using BuildingBlocks.Infrastructure.Outbox.Persistence;
 using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,9 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IDomainEventPublisher, MediaRDomainEventPublisher>();
 		services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
 		services.AddScoped<IOutboxRepository, OutboxRepository>();
+
+		services.AddSingleton(provider => new RabbitMqConnectionProvider(configuration));
+		services.AddSingleton<IMessageBus, RabbitMQMessageBus>();
 
 		services.AddStackExchangeRedisCache(options =>
 		{
