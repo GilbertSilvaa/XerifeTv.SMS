@@ -1,6 +1,7 @@
 ﻿using Identity.API.Models.Request;
 using Identity.Application.Commands.LoginUser;
 using Identity.Application.Commands.RegisterUser;
+using Identity.Application.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -26,12 +27,34 @@ public static class IdentityEndpointExtension
 				return Results.BadRequest(response.Error.Description);
 
 			return Results.Created();
-
 		})
 			.WithName("RegisterUser")
 			.WithTags("Users")
 			.WithSummary("Register users")
 			.WithDescription("Endpoint intended for registering users")
+			.Produces(StatusCodes.Status201Created)
+			.Produces<string>(StatusCodes.Status400BadRequest);
+
+		group.MapPost("/register/subscriber", [AllowAnonymous]
+		async (RegisterUserSubscriberRequest request, IMediator mediator) =>
+		{
+			var command = new RegisterUserCommand(
+				request.Email, 
+				request.UserName, 
+				request.Password, 
+				EUserRole.SUBSCRIBER);
+
+			var response = await mediator.Send(command);
+
+			if (response.IsFailure)
+				return Results.BadRequest(response.Error.Description);
+
+			return Results.Created();
+		})
+			.WithName("RegisterUserSubscriber")
+			.WithTags("Users")
+			.WithSummary("Register users subscribers")
+			.WithDescription("Endpoint intended for registering users subscribers")
 			.Produces(StatusCodes.Status201Created)
 			.Produces<string>(StatusCodes.Status400BadRequest);
 

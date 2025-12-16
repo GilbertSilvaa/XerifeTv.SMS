@@ -2,7 +2,7 @@
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Outbox;
 
-namespace BuildingBlocks.Infrastructure.Messaging;
+namespace BuildingBlocks.Infrastructure.Messaging.Publishers;
 
 public sealed class OutboxIntegrationEventPublisher : IIntegrationEventPublisher
 {
@@ -15,6 +15,7 @@ public sealed class OutboxIntegrationEventPublisher : IIntegrationEventPublisher
 
 	public async Task PublishAsync<T>(T @event, string routingKey, CancellationToken cancellationToken) where T : IntegrationEvent
 	{
-		await _outboxRepository.AddOrUpdateAsync(new(@event, routingKey));
+		var outboxMessage = OutboxMessage.Create(@event, routingKey);
+        await _outboxRepository.AddOrUpdateAsync(outboxMessage);
 	}
 }

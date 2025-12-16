@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using BuildingBlocks.Core.Events;
+using System.Text.Json;
 
 namespace BuildingBlocks.Core.Outbox;
 
@@ -17,14 +18,17 @@ public sealed class OutboxMessage
 
 	private OutboxMessage() { }
 
-	public OutboxMessage(object @event, string routingKey)
-	{
-		Payload = JsonSerializer.Serialize(@event);
-		EventType = @event.GetType().AssemblyQualifiedName!;
-		RoutingKey = routingKey;
-	}
+	public static OutboxMessage Create<T>(T @event, string routingKey) where T : IntegrationEvent
+    {
+		return new()
+		{
+            Payload = JsonSerializer.Serialize(IntegrationEventEnvelope.MapFromIntegrationEvent(@event)),
+            EventType = @event.GetType().AssemblyQualifiedName!,
+            RoutingKey = routingKey
+        };
+    }
 
-	public void MarkAsProcessing()
+    public void MarkAsProcessing()
 	{
 		Status = EOutboxMessageStatus.PROCESSING;
 		LastAttemptAt = DateTime.UtcNow;

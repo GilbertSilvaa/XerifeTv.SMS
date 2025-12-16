@@ -1,10 +1,14 @@
 ﻿using BuildingBlocks.Behaviors;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Outbox;
-using BuildingBlocks.Infrastructure.Messaging;
-using BuildingBlocks.Infrastructure.Messaging.RabbitMQ;
+using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
+using BuildingBlocks.Infrastructure.Messaging.Consumers;
+using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
+using BuildingBlocks.Infrastructure.Messaging.Publishers;
+using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Infrastructure.Outbox.Persistence;
 using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
+using BuildingBlocks.IntegrationEvents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,9 +37,12 @@ public static class ServiceCollectionExtensions
 
 	private static IServiceCollection AddBuildingBlocksInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddScoped<IDomainEventPublisher, MediaRDomainEventPublisher>();
-		services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
+		services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
+        services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
+        services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
 		services.AddScoped<IOutboxRepository, OutboxRepository>();
+
+		services.AddSingleton<IntegrationEventTypeMapper>();
 
 		services.AddSingleton(provider => new RabbitMqConnectionProvider(configuration));
 		services.AddSingleton<IMessageBus, RabbitMQMessageBus>();
@@ -54,7 +61,10 @@ public static class ServiceCollectionExtensions
 			});
 		});
 
-		return services;
+		services.AddHostedService<OutboxProcessorWorker>();
+        services.AddHostedService<IntegrationEventConsumerWorker>();
+
+        return services;
 	}
 
 	private static IServiceCollection AddBuildingBlocksBehaviors(this IServiceCollection services)

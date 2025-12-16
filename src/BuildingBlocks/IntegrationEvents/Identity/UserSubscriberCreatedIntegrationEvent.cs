@@ -2,4 +2,6 @@
 
 namespace BuildingBlocks.IntegrationEvents.Identity;
 
-public record UserSubscriberCreatedIntegrationEvent(string Email, string UserName) : IntegrationEvent;
+[EventMetadata("subscriber.created", 1.0)]
+public record UserSubscriberCreatedIntegrationEvent(string Email, string UserName, double Version = 1.0) 
+	: IntegrationEvent("subscriber.created", Version);

@@ -1,5 +1,5 @@
 ﻿namespace BuildingBlocks.Core.Events;
 
-public interface IIntegrationEventHandler<TDomainEvent>
-	: INotificationHandler<TDomainEvent>
-	where TDomainEvent : IntegrationEvent;
+public interface IIntegrationEventHandler<TIntegrationEvent>
+    : INotificationHandler<TIntegrationEvent>
+    where TIntegrationEvent : IntegrationEvent;

@@ -2,4 +2,6 @@
 
 namespace BuildingBlocks.IntegrationEvents.Plans;
 
-public sealed record PlanDeletedIntegrationEvent(Guid Id) : IntegrationEvent;
+[EventMetadata("plan.deleted", 1.0)]
+public sealed record PlanDeletedIntegrationEvent(Guid Id, double Version = 1.0) 
+	: IntegrationEvent("plan.deleted", Version);

@@ -12,7 +12,7 @@ public class PlanDbContext : ApplicationDbContext
 
 	public PlanDbContext(
 		DbContextOptions<PlanDbContext> options,
-		IDomainEventPublisher eventPublisher,
+		IDomainEventDispatcher eventPublisher,
 		IDistributedCache cache) : base(options, eventPublisher)
 	{
 		_cache = cache;

@@ -17,6 +17,6 @@ public sealed class PlanDeletedEventHandler : IDomainEventHandler<PlanDeletedDom
 	public async Task Handle(DomainEventNotification<PlanDeletedDomainEvent> notification, CancellationToken cancellationToken)
 	{
 		var integrationEvent = new PlanDeletedIntegrationEvent(notification.DomainEvent.Id);
-		await _publisher.PublishAsync(integrationEvent, "plans.deleted", cancellationToken);
+		await _publisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
 	}
 }

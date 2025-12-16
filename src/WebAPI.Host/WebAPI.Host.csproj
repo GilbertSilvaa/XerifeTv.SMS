@@ -22,6 +22,8 @@
     <ProjectReference Include="..\Modules\Plans\Plans.API\Plans.API.csproj" />
     <ProjectReference Include="..\Modules\Plans\Plans.Application\Plans.Application.csproj" />
     <ProjectReference Include="..\Modules\Plans\Plans.Infrastructure\Plans.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Subscriber\Subscribers.Application\Subscribers.Application.csproj" />
+    <ProjectReference Include="..\Modules\Subscriber\Subscribers.Infrastructure\Subscribers.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

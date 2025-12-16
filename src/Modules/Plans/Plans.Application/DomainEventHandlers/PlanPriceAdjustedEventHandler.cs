@@ -17,6 +17,6 @@ internal sealed class PlanPriceAdjustedEventHandler : IDomainEventHandler<PlanPr
 	public async Task Handle(DomainEventNotification<PlanPriceAdjustedDomainEvent> notification, CancellationToken cancellationToken)
 	{
 		var integrationEvent = new PlanPriceAjustedIntegrationEvent(notification.DomainEvent.Id, notification.DomainEvent.NewPrice);
-		await _publisher.PublishAsync(integrationEvent, "plans.updated", cancellationToken);
+		await _publisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
 	}
 }

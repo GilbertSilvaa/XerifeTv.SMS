@@ -8,7 +8,7 @@ public class OutboxDbContext : ApplicationDbContext
 {
 	public OutboxDbContext(
 		DbContextOptions<OutboxDbContext> options,
-		IDomainEventPublisher eventPublisher) : base(options, eventPublisher) { }
+		IDomainEventDispatcher eventPublisher) : base(options, eventPublisher) { }
 
 	public DbSet<OutboxMessage> OutboxMessages { get; set; }
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 
-namespace BuildingBlocks.Infrastructure.Messaging.RabbitMQ;
+namespace BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 
 public sealed class RabbitMqConnectionProvider : IAsyncDisposable
 {

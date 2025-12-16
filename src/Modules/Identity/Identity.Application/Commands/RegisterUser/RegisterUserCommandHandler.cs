@@ -13,7 +13,7 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 	public readonly IIntegrationEventPublisher _integrationEventPublisher;
 
 	public RegisterUserCommandHandler(
-		UserManager<IdentityUser> userManager, 
+		UserManager<IdentityUser> userManager,
 		RoleManager<IdentityRole> roleManager,
 		IIntegrationEventPublisher integrationEventPublisher)
 	{
@@ -43,8 +43,11 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 
 		await _userManager.AddToRoleAsync(user, request.Role.ToString());
 
-		var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName);
-		await _integrationEventPublisher.PublishAsync(integrationEvent, "subscriber.created", cancellationToken);
+		if (request.Role == Enums.EUserRole.SUBSCRIBER)
+		{
+			var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName);
+			await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
+		}
 
 		return Result.Success();
 	}

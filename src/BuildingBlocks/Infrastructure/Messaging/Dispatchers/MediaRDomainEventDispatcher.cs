@@ -2,18 +2,18 @@
 using BuildingBlocks.Core.Messaging;
 using SharedKernel;
 
-namespace BuildingBlocks.Infrastructure.Messaging;
+namespace BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 
-public sealed class MediaRDomainEventPublisher : IDomainEventPublisher
+public sealed class MediaRDomainEventDispatcher : IDomainEventDispatcher
 {
 	private readonly IMediator _mediator;
 
-	public MediaRDomainEventPublisher(IMediator mediator)
+	public MediaRDomainEventDispatcher(IMediator mediator)
 	{
 		_mediator = mediator;
 	}
 
-	public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken) where T : DomainEvent
+	public async Task DispatchAsync<T>(T @event, CancellationToken cancellationToken) where T : DomainEvent
 	{
 		var notificationType = typeof(DomainEventNotification<>).MakeGenericType(@event.GetType());
 

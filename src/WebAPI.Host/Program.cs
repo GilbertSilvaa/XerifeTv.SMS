@@ -6,6 +6,8 @@ using Microsoft.OpenApi.Models;
 using Plans.API;
 using Plans.Application;
 using Plans.Infrastructure;
+using Subscribers.Application;
+using Subscribers.Infrastructure;
 
 internal class Program
 {
@@ -19,10 +21,12 @@ internal class Program
 			.AddModulePlanInfrastructure(builder.Configuration)
 			.AddModulePlanApplication()
 			.AddModuleIdentityInfrastructure(builder.Configuration)
-			.AddModuleIdentityApplication();
+			.AddModuleIdentityApplication()
+			.AddModuleSubscriberInfrastructure(builder.Configuration)
+            .AddModuleSubscriberApplication();
 
-		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-		builder.Services.AddEndpointsApiExplorer();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
 		builder.Services.AddSwaggerGen(c =>
 		{
 			c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

@@ -15,7 +15,13 @@ public class BaseRepository<T> : IRepository<T> where T : AggregateRoot
 
 	public async Task AddOrUpdateAsync(T entity)
 	{
-		_dataSet.Update(entity);
+		var exists = await _dataSet.AnyAsync(e => e.Id == entity.Id);
+
+		if (!exists)
+			_dataSet.Add(entity);
+		else
+			_dataSet.Update(entity);
+
 		await _dbContext.SaveChangesAsync();
 	}
 

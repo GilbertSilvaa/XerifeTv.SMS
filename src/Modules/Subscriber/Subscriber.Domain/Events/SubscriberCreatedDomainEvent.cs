@@ -2,4 +2,4 @@
 
 namespace Subscribers.Domain.Events;
 
-public sealed record SubscriberCreatedDomainEvent(string Email, string UserName, string Password) : DomainEvent;
+public sealed record SubscriberCreatedDomainEvent(Guid Id, string Email, string UserName) : DomainEvent;

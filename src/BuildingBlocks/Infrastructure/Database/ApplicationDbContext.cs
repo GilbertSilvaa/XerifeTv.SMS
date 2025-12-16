@@ -5,9 +5,9 @@ namespace BuildingBlocks.Infrastructure.Database;
 
 public class ApplicationDbContext : DbContext
 {
-	private readonly IDomainEventPublisher _domainEventPublisher;
+	private readonly IDomainEventDispatcher _domainEventPublisher;
 
-	public ApplicationDbContext(DbContextOptions options, IDomainEventPublisher eventPublisher) : base(options)
+	public ApplicationDbContext(DbContextOptions options, IDomainEventDispatcher eventPublisher) : base(options)
 	{
 		_domainEventPublisher = eventPublisher;
 	}
@@ -29,7 +29,7 @@ public class ApplicationDbContext : DbContext
 
 		var tasks = entitiesWithEvents
 			.SelectMany(e => e.DomainEvents)
-			.Select(domainEvent => _domainEventPublisher.PublishAsync(domainEvent, cancellationToken));
+			.Select(domainEvent => _domainEventPublisher.DispatchAsync(domainEvent, cancellationToken));
 
 		await Task.WhenAll(tasks);
 

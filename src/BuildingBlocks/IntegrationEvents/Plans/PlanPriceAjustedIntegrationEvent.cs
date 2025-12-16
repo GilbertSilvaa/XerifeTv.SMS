@@ -3,4 +3,6 @@ using SharedKernel;
 
 namespace BuildingBlocks.IntegrationEvents.Plans;
 
-public sealed record PlanPriceAjustedIntegrationEvent(Guid Id, Money Price) : IntegrationEvent;
+[EventMetadata("plan.priceadjusted", 1.0)]
+public sealed record PlanPriceAjustedIntegrationEvent(Guid Id, Money Price, double Version = 1.0) 
+	: IntegrationEvent("plan.priceadjusted", Version);

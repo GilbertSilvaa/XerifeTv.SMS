@@ -2,4 +2,6 @@
 
 namespace BuildingBlocks.IntegrationEvents.Plans;
 
-public sealed record PlanScreensAdjustedIntegrationEvent(Guid Id, int NewMaxSimultaneousScreens) : IntegrationEvent;
+[EventMetadata("plan.screensadjusted", 1.0)]
+public sealed record PlanScreensAdjustedIntegrationEvent(Guid Id, int NewMaxSimultaneousScreens, double Version = 1.0) 
+	: IntegrationEvent("plan.screensadjusted", Version);
