@@ -1,5 +1,4 @@
 ﻿using BuildingBlocks.Common;
-using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

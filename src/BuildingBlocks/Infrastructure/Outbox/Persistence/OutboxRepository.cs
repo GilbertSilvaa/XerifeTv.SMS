@@ -16,11 +16,11 @@ public class OutboxRepository : IOutboxRepository
 
 	public async Task AddOrUpdateAsync(OutboxMessage entity)
 	{
-		var existing = await _dataSet
-		.AsNoTracking()
-		.FirstOrDefaultAsync(x => x.Id == entity.Id);
+        var exists = await _dataSet
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == entity.Id);
 
-		if (existing == null)
+        if (!exists)
 		{
 			await _dataSet.AddAsync(entity);
 		}
