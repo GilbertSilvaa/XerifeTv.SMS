@@ -2,15 +2,14 @@
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Outbox;
 using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
-using BuildingBlocks.Infrastructure.Messaging.Consumers;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 using BuildingBlocks.Infrastructure.Messaging.Publishers;
-using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Infrastructure.Outbox.Persistence;
 using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
 using BuildingBlocks.IntegrationEvents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace BuildingBlocks;
 
@@ -61,8 +60,8 @@ public static class ServiceCollectionExtensions
 			});
 		});
 
-		services.AddHostedService<OutboxProcessorWorker>();
-        services.AddHostedService<IntegrationEventConsumerWorker>();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
 
         return services;
 	}

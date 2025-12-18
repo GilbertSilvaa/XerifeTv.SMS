@@ -1,17 +1,15 @@
-﻿using BuildingBlocks.Common;
+using BuildingBlocks.Common;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Outbox;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-namespace BuildingBlocks.Infrastructure.Outbox;
+namespace OutboxPublisher.Worker;
 
-public sealed class OutboxProcessorWorker : BackgroundService
+public class Worker : BackgroundService
 {
     private readonly IMessageBus _messageBus;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public OutboxProcessorWorker(
+    public Worker(
         IMessageBus messageBus,
         IServiceScopeFactory scopeFactory)
     {
@@ -56,7 +54,7 @@ public sealed class OutboxProcessorWorker : BackgroundService
                 }
             }
 
-            await Task.Delay(millisecondsDelay: 5000, stoppingToken);
+            await Task.Delay(millisecondsDelay: 2000, stoppingToken);
         }
     }
 }

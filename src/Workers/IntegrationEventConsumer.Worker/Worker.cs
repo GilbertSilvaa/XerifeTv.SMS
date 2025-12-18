@@ -1,16 +1,14 @@
-﻿using BuildingBlocks.Common;
+using BuildingBlocks.Common;
 using BuildingBlocks.Core.Messaging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-namespace BuildingBlocks.Infrastructure.Messaging.Consumers;
+namespace IntegrationEventConsumer.Worker;
 
-public sealed class IntegrationEventConsumerWorker : BackgroundService
+public class Worker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IMessageBus _messageBus;
 
-    public IntegrationEventConsumerWorker(
+    public Worker(
         IMessageBus messageBus,
         IServiceScopeFactory scopeFactory)
     {
@@ -19,7 +17,7 @@ public sealed class IntegrationEventConsumerWorker : BackgroundService
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {    
+    {
         await _messageBus.SubscribeAsync(
             topic: MessagingConstants.INTEGRATION_EVENTS_TOPIC,
             handler: async (eventEnvelope) =>

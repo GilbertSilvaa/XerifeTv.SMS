@@ -28,10 +28,5 @@ public sealed class IntegrationEventTypeMapper
     }
 
     public Type? GetEventTypeByName(string eventName)
-    {
-        if (_eventTypeMappings.TryGetValue(eventName, out var eventType))
-            return eventType;
-
-        return null;
-    }
+        => _eventTypeMappings.TryGetValue(eventName, out var eventType) ? eventType : null;
 }
