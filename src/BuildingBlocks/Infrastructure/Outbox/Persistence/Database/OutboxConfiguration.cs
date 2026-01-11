@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Outbox;
+﻿using BuildingBlocks.Core.Messaging.Outbox;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database;

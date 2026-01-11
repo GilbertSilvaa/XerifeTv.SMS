@@ -1,5 +1,5 @@
 ﻿using BuildingBlocks.Core.Messaging;
-using BuildingBlocks.Core.Outbox;
+using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Database;
 
 namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database;

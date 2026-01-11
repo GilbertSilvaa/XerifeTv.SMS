@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Outbox;
+﻿using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
 
 namespace BuildingBlocks.Infrastructure.Outbox.Persistence;

@@ -1,6 +1,6 @@
 ﻿using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
-using BuildingBlocks.Core.Outbox;
+using BuildingBlocks.Core.Messaging.Outbox;
 
 namespace BuildingBlocks.Infrastructure.Messaging.Publishers;
 

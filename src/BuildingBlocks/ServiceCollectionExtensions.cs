@@ -1,6 +1,6 @@
 ﻿using BuildingBlocks.Behaviors;
 using BuildingBlocks.Core.Messaging;
-using BuildingBlocks.Core.Outbox;
+using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 using BuildingBlocks.Infrastructure.Messaging.Publishers;

@@ -42,4 +42,8 @@
 		<ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Core\Messaging\Inbox\" />
+	</ItemGroup>
+
 </Project>

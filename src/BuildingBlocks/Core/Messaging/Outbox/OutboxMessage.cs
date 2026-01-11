@@ -1,7 +1,7 @@
 ﻿using BuildingBlocks.Core.Events;
 using System.Text.Json;
 
-namespace BuildingBlocks.Core.Outbox;
+namespace BuildingBlocks.Core.Messaging.Outbox;
 
 public sealed class OutboxMessage
 {
