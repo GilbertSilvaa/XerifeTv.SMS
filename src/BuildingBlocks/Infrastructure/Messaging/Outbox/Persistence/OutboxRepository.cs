@@ -1,7 +1,7 @@
 ﻿using BuildingBlocks.Core.Messaging.Outbox;
-using BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
+using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 
-namespace BuildingBlocks.Infrastructure.Outbox.Persistence;
+namespace BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence;
 
 public class OutboxRepository : IOutboxRepository
 {

@@ -2,7 +2,7 @@
 using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Database;
 
-namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
+namespace BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 
 public class OutboxDbContext : ApplicationDbContext
 {

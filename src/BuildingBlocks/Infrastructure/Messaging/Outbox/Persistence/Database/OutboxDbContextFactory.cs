@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Design;
 
-namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
+namespace BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 
 public class OutboxDbContextFactory : IDesignTimeDbContextFactory<OutboxDbContext>
 {

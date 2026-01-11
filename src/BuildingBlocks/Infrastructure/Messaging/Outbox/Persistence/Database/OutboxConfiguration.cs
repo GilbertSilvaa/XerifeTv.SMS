@@ -1,7 +1,7 @@
 ﻿using BuildingBlocks.Core.Messaging.Outbox;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database;
+namespace BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 
 public class OutboxConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {
