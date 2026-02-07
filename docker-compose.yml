@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: xerifetv.sms.api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - xerifetv-net
+
+  postgres:
+    container_name: xerifetv.postgres
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - xerifetv-net
+
+  redis:
+    container_name: xerifetv.redis
+    image: redis:7
+    networks:
+      - xerifetv-net
+
+  rabbitmq:
+    container_name: xerifetv.rabbitmq
+    image: rabbitmq:3-management
+    networks:
+      - xerifetv-net
+
+volumes:
+  postgres_data:
+
+networks:
+  xerifetv-net:
+    driver: bridge

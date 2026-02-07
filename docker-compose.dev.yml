@@ -1,0 +1,46 @@
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+      ConnectionStrings__PostgreSQLConnection: >
+        Host=postgres;
+        Port=5432;
+        Database=XerifeTvSMSDev;
+        Username=postgres;
+        Password=senha123
+
+      Redis__Connection: redis:6379
+      Redis__InstanceName: XerifeSMS.Dev.Redis
+
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__Username: admin
+      RabbitMQ__Password: admin
+      RabbitMQ__VHost: /
+
+    ports:
+      - "5000:8080"
+
+    volumes:
+      - ./src:/app
+
+  postgres:
+    environment:
+      POSTGRES_DB: XerifeTvSMSDev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha123
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"

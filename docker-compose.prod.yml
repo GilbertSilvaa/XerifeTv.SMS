@@ -1,0 +1,14 @@
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    restart: always
+
+  postgres:
+    restart: always
+
+  redis:
+    restart: always
+
+  rabbitmq:
+    restart: always
