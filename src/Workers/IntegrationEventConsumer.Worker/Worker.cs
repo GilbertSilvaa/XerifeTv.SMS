@@ -20,12 +20,12 @@ public class Worker : BackgroundService
     {
         await _messageBus.SubscribeAsync(
             topic: MessagingConstants.INTEGRATION_EVENTS_TOPIC,
-            handler: async (eventEnvelope) =>
+            handler: async (@event) =>
             {
                 using var scope = _scopeFactory.CreateScope();
                 var integrationEventDispatcher = scope.ServiceProvider.GetRequiredService<IIntegrationEventDispatcher>();
 
-                await integrationEventDispatcher.DispatchAsync(eventEnvelope, stoppingToken);
+                await integrationEventDispatcher.DispatchAsync(@event, stoppingToken);
             },
             cancellationToken: stoppingToken);
     }

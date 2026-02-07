@@ -1,11 +1,12 @@
 using BuildingBlocks.Common;
 using BuildingBlocks.Core.Messaging;
-using BuildingBlocks.Core.Outbox;
+using BuildingBlocks.Core.Messaging.Outbox;
 
 namespace OutboxPublisher.Worker;
 
 public class Worker : BackgroundService
 {
+    private const int MAX_RETRY_PUBLISH_MESSAGE = 5;
     private readonly IMessageBus _messageBus;
     private readonly IServiceScopeFactory _scopeFactory;
 
@@ -32,24 +33,30 @@ public class Worker : BackgroundService
             {
                 foreach (var message in messages)
                 {
-                    try
+                    for (int attempt = 0; attempt < MAX_RETRY_PUBLISH_MESSAGE; attempt++)
                     {
-                        message.MarkAsProcessing();
-                        await outboxRepository.AddOrUpdateAsync(message);
+                        try
+                        {
+                            message.MarkAsProcessing();
+                            await outboxRepository.AddOrUpdateAsync(message);
 
-                        await _messageBus.PublishAsync(
-                            message: message.Payload,
-                            topic: MessagingConstants.INTEGRATION_EVENTS_TOPIC,
-                            key: message.RoutingKey,
-                            stoppingToken);
+                            await _messageBus.PublishAsync(
+                                message: message.Payload,
+                                topic: MessagingConstants.INTEGRATION_EVENTS_TOPIC,
+                                key: message.RoutingKey,
+                                stoppingToken);
 
-                        message.MarkAsCompleted();
-                        await outboxRepository.AddOrUpdateAsync(message);
-                    }
-                    catch (Exception)
-                    {
-                        message.MarkAsFailed();
-                        await outboxRepository.AddOrUpdateAsync(message);
+                            message.MarkAsCompleted();
+                            await outboxRepository.AddOrUpdateAsync(message);
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            message.MarkAsFailed();
+                            await outboxRepository.AddOrUpdateAsync(message);
+                        }
+
+                        await Task.Delay(TimeSpan.FromSeconds(2 * attempt).Milliseconds, stoppingToken);
                     }
                 }
             }

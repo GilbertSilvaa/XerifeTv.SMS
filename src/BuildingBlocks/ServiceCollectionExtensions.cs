@@ -1,8 +1,11 @@
 ﻿using BuildingBlocks.Behaviors;
 using BuildingBlocks.Core.Messaging;
+using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
+using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
+using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
 using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence;
 using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 using BuildingBlocks.Infrastructure.Messaging.Publishers;
@@ -40,8 +43,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
 		services.AddScoped<IOutboxRepository, OutboxRepository>();
+		services.AddScoped<IInboxRepository, InboxRepository>();
 
-		services.AddSingleton<IntegrationEventTypeMapper>();
+        services.AddSingleton<IntegrationEventTypeMapper>();
 
 		services.AddSingleton(provider => new RabbitMqConnectionProvider(configuration));
 		services.AddSingleton<IMessageBus, RabbitMQMessageBus>();
@@ -59,6 +63,14 @@ public static class ServiceCollectionExtensions
 				npgsqlOptions.MigrationsAssembly(typeof(OutboxDbContext).Assembly.FullName);
 			});
 		});
+
+        services.AddDbContextFactory<InboxDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(InboxDbContext).Assembly.FullName);
+            });
+        });
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
