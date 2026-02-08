@@ -1,4 +1,5 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Core;
+using BuildingBlocks.Core.CQRS;
 using Plans.Domain;
 using SharedKernel;
 
@@ -8,12 +9,14 @@ internal sealed class CreatePlanCommandHandler : ICommandHandler<CreatePlanComma
 {
 	private readonly IPlanRepository _repository;
 	private readonly PlanService _domainService;
+	private readonly IUnitOfWork<Plan> _unitOfWork;
 
-	public CreatePlanCommandHandler(IPlanRepository repository)
+    public CreatePlanCommandHandler(IPlanRepository repository, IUnitOfWork<Plan> unitOfWork)
 	{
 		_repository = repository;
 		_domainService = new PlanService(_repository);
-	}
+		_unitOfWork = unitOfWork;
+    }
 
 	public async Task<Result> Handle(CreatePlanCommand request, CancellationToken cancellationToken)
 	{
@@ -23,7 +26,8 @@ internal sealed class CreatePlanCommandHandler : ICommandHandler<CreatePlanComma
 			return Result.Failure(planResult.Error);
 
 		await _repository.AddOrUpdateAsync(planResult.Data!);
+		await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-		return Result.Success();
+        return Result.Success();
 	}
 }

@@ -20,7 +20,7 @@ public class InboxRepository : IInboxRepository
     {
         try
         {
-            await _dataSet.AddAsync(entity);
+            _dataSet.Add(entity);
             await _dbContext.SaveChangesAsync();
         }
         catch (DbUpdateException ex)

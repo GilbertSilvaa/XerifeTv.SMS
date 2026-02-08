@@ -41,14 +41,16 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 		if (!await _roleManager.RoleExistsAsync(request.Role.ToString()))
 			await _roleManager.CreateAsync(new IdentityRole(request.Role.ToString()));
 
-		await _userManager.AddToRoleAsync(user, request.Role.ToString());
+		var addRoleResult = await _userManager.AddToRoleAsync(user, request.Role.ToString());
 
-		if (request.Role == Enums.EUserRole.SUBSCRIBER)
+		if (addRoleResult.Succeeded && request.Role == Enums.EUserRole.SUBSCRIBER)
 		{
 			var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName);
 			await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
-		}
 
-		return Result.Success();
-	}
+			return Result.Success();
+		}
+		
+		return Result.Failure(new Error("RegisterUserCommandHandler.Handle", "Failed to assign role to user."));
+    }
 }

@@ -2,54 +2,51 @@
 
 namespace BuildingBlocks.Infrastructure;
 
-public class BaseRepository<T> : IRepository<T> where T : AggregateRoot
+public abstract class BaseRepository<T> : IRepository<T> where T : AggregateRoot
 {
-	private readonly DbContext _dbContext;
-	private readonly DbSet<T> _dataSet;
+    private readonly DbContext _dbContext;
+    private readonly DbSet<T> _dataSet;
 
-	public BaseRepository(DbContext dbContext)
-	{
-		_dbContext = dbContext;
-		_dataSet = _dbContext.Set<T>();
-	}
+    public BaseRepository(DbContext dbContext)
+    {
+        _dbContext = dbContext;
+        _dataSet = _dbContext.Set<T>();
+    }
 
-	public async Task AddOrUpdateAsync(T entity)
-	{
-		var exists = await _dataSet
-			.AsNoTracking()
-			.AnyAsync(e => e.Id == entity.Id);
+    public async Task AddOrUpdateAsync(T entity)
+    {
+        var exists = await _dataSet
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == entity.Id);
 
-		if (!exists)
-		{
-			await _dataSet.AddAsync(entity);
-		}
-		else
-		{
-			_dataSet.Update(entity);
-		}
+        if (!exists)
+        {
+            _dataSet.Add(entity);
+        }
+        else
+        {
+            _dataSet.Update(entity);
+        }
+    }
 
-		await _dbContext.SaveChangesAsync();
-	}
+    public async Task<int> CountAsync()
+    {
+        return await _dataSet.Where(e => !e.IsDeleted).CountAsync();
+    }
 
-	public async Task<int> CountAsync()
-	{
-		return await _dataSet.Where(e => !e.IsDeleted).CountAsync();
-	}
+    public async Task<T?> GetByIdAsync(Guid id)
+    {
+        return await _dataSet.SingleOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+    }
 
-	public async Task<T?> GetByIdAsync(Guid id)
-	{
-		return await _dataSet.SingleOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
-	}
+    public async Task RemoveAsync(Guid id)
+    {
+        var result = await _dataSet.SingleOrDefaultAsync(e => e.Id == id);
 
-	public async Task RemoveAsync(Guid id)
-	{
-		var result = await _dataSet.SingleOrDefaultAsync(e => e.Id == id);
-
-		if (result is T entity)
-		{
-			entity.Delete();
-			_dataSet.Update(entity);
-			await _dbContext.SaveChangesAsync();
-		}
-	}
+        if (result is T entity)
+        {
+            entity.Delete();
+            _dataSet.Update(entity);
+        }
+    }
 }

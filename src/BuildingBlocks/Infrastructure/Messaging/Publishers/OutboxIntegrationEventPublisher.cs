@@ -15,7 +15,6 @@ public sealed class OutboxIntegrationEventPublisher : IIntegrationEventPublisher
 
 	public async Task PublishAsync<T>(T @event, string routingKey, CancellationToken cancellationToken) where T : IntegrationEvent
 	{
-		var outboxMessage = OutboxMessage.Create(@event, routingKey);
-        await _outboxRepository.AddOrUpdateAsync(outboxMessage);
+        await _outboxRepository.AddOrUpdateAsync(OutboxMessage.Create(@event, routingKey));
 	}
 }
