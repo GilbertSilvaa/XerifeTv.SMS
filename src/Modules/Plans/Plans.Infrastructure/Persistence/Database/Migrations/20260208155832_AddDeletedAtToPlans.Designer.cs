@@ -3,18 +3,21 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Plans.Infrastructure.Persistence.Database;
 
 #nullable disable
 
-namespace Plans.Infrastructure.Migrations
+namespace Plans.Infrastructure.Persistence.Database.Migrations
 {
     [DbContext(typeof(PlanDbContext))]
-    partial class PlanDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208155832_AddDeletedAtToPlans")]
+    partial class AddDeletedAtToPlans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
