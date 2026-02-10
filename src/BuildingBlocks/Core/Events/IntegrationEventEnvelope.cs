@@ -2,7 +2,7 @@
 
 namespace BuildingBlocks.Core.Events;
 
-public sealed class IntegrationEventEnvelope
+public sealed class IntegrationEventEnvelope : INotification
 {
     public Guid EventId { get; set; }
     public string EventType { get; set; } = default!;
@@ -15,7 +15,7 @@ public sealed class IntegrationEventEnvelope
 
     public static IntegrationEventEnvelope MapFromIntegrationEvent<T>(T @event) where T : IntegrationEvent
     {
-        return new ()
+        return new()
         {
             EventId = @event.EventId,
             EventType = @event.EventType,
