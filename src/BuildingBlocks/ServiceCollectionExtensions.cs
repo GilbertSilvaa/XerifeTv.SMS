@@ -47,9 +47,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IntegrationEventTypeMapper>();
 
-		services.AddSingleton(provider => new RabbitMqConnectionProvider(configuration));
-		services.AddSingleton<IMessageBus, RabbitMQMessageBus>();
-
 		services.AddStackExchangeRedisCache(options =>
 		{
 			options.Configuration = configuration["Redis:Connection"];

@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace BuildingBlocks.Infrastructure.Messaging.Consumers;
 
-internal sealed class IntegrationEventEnvelopeHandler : INotificationHandler<IntegrationEventEnvelope>
+public sealed class IntegrationEventEnvelopeHandler : INotificationHandler<IntegrationEventEnvelope>
 {
     private readonly IMediator _mediator;
     private readonly IntegrationEventTypeMapper _integrationEventTypeMapper;

@@ -36,6 +36,8 @@
 		<PackageReference Include="Scrutor" Version="6.1.0" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.9" />
 		<PackageReference Include="System.Text.Encodings.Web" Version="9.0.9" />
+		<PackageReference Include="WolverineFx" Version="5.15.0" />
+		<PackageReference Include="WolverineFx.RabbitMQ" Version="5.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>
