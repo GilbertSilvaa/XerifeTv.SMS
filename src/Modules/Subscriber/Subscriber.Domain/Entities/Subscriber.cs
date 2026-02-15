@@ -1,6 +1,7 @@
 ﻿using SharedKernel;
 using Subscribers.Domain.Events;
 using Subscribers.Domain.Exceptions;
+using System.Collections.ObjectModel;
 
 namespace Subscribers.Domain.Entities;
 
@@ -8,9 +9,11 @@ public sealed class Subscriber : AggregateRoot
 {
 	public string UserName { get; private set; } = default!;
 	public string Email { get; private set; } = default!;
-	public ICollection<Signature> Signatures { get; private set; } = [];
 
-	private Subscriber() { }
+	private readonly List<Signature> _signatures  = [];
+    public IReadOnlyList<Signature> Signatures => _signatures;
+
+    private Subscriber() { }
 
 	private Subscriber(string userName, string email)
 	{
@@ -47,7 +50,7 @@ public sealed class Subscriber : AggregateRoot
 
 		var signature = Signature.Create(planId, Id);
 
-		Signatures.Add(signature);
+		_signatures.Add(signature);
 		AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.PlanId, Id));
 	}
 

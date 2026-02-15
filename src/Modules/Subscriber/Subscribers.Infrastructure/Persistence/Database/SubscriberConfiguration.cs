@@ -21,6 +21,7 @@ public class SubscriberConfiguration : IEntityTypeConfiguration<Subscriber>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(x => x.Signatures)
+            .HasField("_signatures")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Ignore(p => p.DomainEvents);
