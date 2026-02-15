@@ -1,7 +1,6 @@
 ﻿using SharedKernel;
 using Subscribers.Domain.Events;
 using Subscribers.Domain.Exceptions;
-using System.Collections.ObjectModel;
 
 namespace Subscribers.Domain.Entities;
 

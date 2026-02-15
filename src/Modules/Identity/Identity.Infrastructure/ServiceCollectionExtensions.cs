@@ -30,7 +30,8 @@ public static class ServiceCollectionExtensions
 		.AddEntityFrameworkStores<IdentityDbContext>()
 		.AddDefaultTokenProviders();
 
-		services.AddSettingJWT(configuration);
+        var jwtSettingsSection = configuration.GetSection("Jwt");
+		if (jwtSettingsSection.Exists()) services.AddSettingJWT(configuration);
 
 		return services;
 	}

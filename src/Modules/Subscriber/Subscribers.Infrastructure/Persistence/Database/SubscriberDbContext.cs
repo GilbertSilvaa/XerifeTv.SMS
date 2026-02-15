@@ -8,7 +8,7 @@ namespace Subscribers.Infrastructure.Persistence.Database;
 public class SubscriberDbContext : ApplicationDbContext
 {
     public SubscriberDbContext(
-        DbContextOptions options,
+        DbContextOptions<SubscriberDbContext> options,
         IDomainEventDispatcher eventPublisher) : base(options, eventPublisher) { }
 
     public DbSet<Subscriber> Subscribers { get; set; }
