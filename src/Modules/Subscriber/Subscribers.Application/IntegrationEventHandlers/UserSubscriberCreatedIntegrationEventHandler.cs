@@ -30,7 +30,7 @@ internal sealed class UserSubscriberCreatedIntegrationEventHandler : IIntegratio
         catch (Exception ex)
         {
             string errorMessage = $"UserSubscriberCreatedIntegrationEventHandler.Error: {ex.Message}";
-            SubscriberCreatedFailedIntegrationEvent integrationEvent = new(notification.Email, notification.UserName, errorMessage);
+            SubscriberCreationFailedIntegrationEvent integrationEvent = new(notification.Email, notification.UserName, errorMessage);
             await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
         }
     }
