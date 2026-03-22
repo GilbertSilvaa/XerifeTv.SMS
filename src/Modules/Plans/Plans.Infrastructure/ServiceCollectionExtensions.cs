@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Plans.Application.Contracts;
+using Plans.Application.Abstractions;
 using Plans.Domain;
 using Plans.Infrastructure.Persistence;
 using Plans.Infrastructure.Persistence.Database;

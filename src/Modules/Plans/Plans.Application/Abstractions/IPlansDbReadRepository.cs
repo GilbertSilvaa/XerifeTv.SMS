@@ -1,6 +1,6 @@
-﻿using Plans.Application.DTOs;
+﻿using Plans.Application.Abstractions.DTOs;
 
-namespace Plans.Application.Contracts;
+namespace Plans.Application.Abstractions;
 
 public interface IPlansReadRepository
 {
