@@ -1,6 +1,6 @@
 ﻿using BuildingBlocks.Core.CQRS;
 using Plans.Application.Contracts;
-using Plans.Application.Contracts.DTOs;
+using Plans.Application.DTOs;
 using SharedKernel;
 
 namespace Plans.Application.Queries.GetPlanById;

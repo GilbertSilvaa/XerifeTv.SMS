@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Plans.Application.Contracts;
-using Plans.Application.Contracts.DTOs;
+using Plans.Application.DTOs;
 using Plans.Domain;
 using Plans.Infrastructure.Persistence.Database;
 

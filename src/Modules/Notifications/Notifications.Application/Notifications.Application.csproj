@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
-    <ProjectReference Include="..\Plans.Domain\Plans.Domain.csproj" />
   </ItemGroup>
 
 </Project>
