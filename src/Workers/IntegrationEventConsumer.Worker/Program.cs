@@ -4,6 +4,8 @@ using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using Identity.Application;
 using Identity.Infrastructure;
 using IntegrationEventConsumer.Worker;
+using Notifications.Application;
+using Notifications.Infrastructure;
 using Subscribers.Application;
 using Subscribers.Infrastructure;
 using ICoreMessageBus = BuildingBlocks.Core.Messaging.IMessageBus;
@@ -15,7 +17,9 @@ builder.Services
         .AddModuleSubscriberInfrastructure(builder.Configuration)
         .AddModuleSubscriberApplication()
         .AddModuleIdentityInfrastructure(builder.Configuration)
-        .AddModuleIdentityApplication();
+        .AddModuleIdentityApplication()
+        .AddModuleNotificationInfrastructure(builder.Configuration)
+        .AddModuleNotificationApplication();
 
 string messageBusProvider = builder.Configuration["MessageBusProvider"] ?? string.Empty;
 
