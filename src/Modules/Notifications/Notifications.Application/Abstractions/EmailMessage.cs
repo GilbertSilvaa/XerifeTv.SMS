@@ -3,5 +3,5 @@
 public record EmailMessage(
     string To,
     string Subject,
-    string Body,
-    bool IsHtml = true);
+    string Template, 
+    Dictionary<string, string> TemplateKeyValues);

@@ -16,10 +16,14 @@ internal class SendEmailOnSubscriberCreatedHandler : IIntegrationEventHandler<Su
     public async Task Handle(SubscriberCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         EmailMessage email = new(
-            notification.Email,
-            "Xerife.TV | Conta criada com sucesso", 
-            $"Olá {notification.UserName}, sua conta na Xerife.TV foi criada com sucesso", 
-            false);
+            To: notification.Email,
+            Subject: "Xerife.TV | Conta criada com sucesso",
+            Template: "AccountCreated",
+            TemplateKeyValues: new()
+            {
+                { "USER_NAME", notification.UserName },
+                { "USER_EMAIL", notification.Email }
+            });
 
         await _emailSender.SendAsync(email, cancellationToken);
     }

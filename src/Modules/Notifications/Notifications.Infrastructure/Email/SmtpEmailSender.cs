@@ -27,8 +27,8 @@ public sealed class SmtpEmailSender : IEmailSender
         {
             From = new(_emailSettings.From),
             Subject = email.Subject,
-            Body = email.Body,
-            IsBodyHtml = email.IsHtml
+            Body = await TemplateRenderer.RenderAsync(email.Template, email.TemplateKeyValues),
+            IsBodyHtml = true
         };
 
         mailMessage.To.Add(email.To);

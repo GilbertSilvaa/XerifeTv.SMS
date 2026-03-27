@@ -11,4 +11,10 @@
     <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+	<None Update="Email/Templates/**/*.html">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+</ItemGroup>
+
 </Project>
