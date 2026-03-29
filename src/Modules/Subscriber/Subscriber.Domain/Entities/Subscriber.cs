@@ -1,74 +1,102 @@
 ﻿using SharedKernel;
+using SharedKernel.Exceptions;
 using Subscribers.Domain.Events;
 using Subscribers.Domain.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace Subscribers.Domain.Entities;
 
 public sealed class Subscriber : AggregateRoot
 {
-	public string UserName { get; private set; } = default!;
-	public string Email { get; private set; } = default!;
+    public string UserName { get; private set; } = default!;
+    public string Email { get; private set; } = default!;
 
-	private readonly List<Signature> _signatures  = [];
+    private readonly List<Signature> _signatures = [];
     public IReadOnlyList<Signature> Signatures => _signatures;
 
     private Subscriber() { }
 
-	private Subscriber(string userName, string email)
-	{
-		UserName = userName;
-		Email = email;
-	}
+    private Subscriber(string userName, string email)
+    {
+        UserName = userName;
+        Email = email;
+    }
 
-	public static Subscriber Create(string userName, string email)
-	{
-		var subscriber = new Subscriber(userName, email);
+    public static Subscriber Create(string userName, string email)
+    {
+        if (!IsValidUserName(userName))
+            throw new ValidationException("O username fornecido é inválido.");
 
-		subscriber.AddDomainEvent(new SubscriberCreatedDomainEvent(subscriber.Id, subscriber.Email, userName));
+        if (!IsValidEmail(email))
+            throw new ValidationException("O email fornecido é inválido.");
 
-		return subscriber;
-	}
+        var subscriber = new Subscriber(userName, email);
 
-	public override bool Delete()
-	{
-		if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
-			throw new ActiveSignatureExistsException("O assinante não pode ser deletado porque possui assinatura ativa.");
+        subscriber.AddDomainEvent(new SubscriberCreatedDomainEvent(subscriber.Id, subscriber.Email, userName));
 
-		bool isDeleted = base.Delete();
+        return subscriber;
+    }
 
-		if (isDeleted)
-			AddDomainEvent(new SubscriberDeletedDomainEvent(Id, Email, UserName, DeletedAt ?? default));
+    public override bool Delete()
+    {
+        if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
+            throw new ActiveSignatureExistsException("O assinante não pode ser deletado porque possui assinatura ativa.");
 
-		return isDeleted;
-	}
+        bool isDeleted = base.Delete();
 
-	public void AddSignature(Guid planId)
-	{
-		if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
-			throw new ActiveSignatureExistsException(Id);
+        if (isDeleted)
+            AddDomainEvent(new SubscriberDeletedDomainEvent(Id, Email, UserName, DeletedAt ?? default));
 
-		var signature = Signature.Create(planId, Id);
+        return isDeleted;
+    }
 
-		_signatures.Add(signature);
-		AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.PlanId, Id));
-	}
+    public void AddSignature(Guid planId)
+    {
+        if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
+            throw new ActiveSignatureExistsException(Id);
 
-	public void CancelSignature()
-	{
-		var signatureActiveOrPending = Signatures
-			.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED)
-			.FirstOrDefault();
+        var signature = Signature.Create(planId, Id);
 
-		if (signatureActiveOrPending == null)
-			return;
+        _signatures.Add(signature);
+        AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.PlanId, Id));
+    }
 
-		signatureActiveOrPending.Cancel();
+    public void CancelSignature()
+    {
+        var signatureActiveOrPending = Signatures
+            .Where(s => s.Status != Enums.ESignatureStatus.CANCELLED)
+            .FirstOrDefault();
 
-		AddDomainEvent(new SignatureCanceledDomainEvent(
-			signatureActiveOrPending.Id,
-			signatureActiveOrPending.PlanId,
-			Id,
-			signatureActiveOrPending.StartDate ?? default,
-			signatureActiveOrPending.EndDate ?? default));
-	}
+        if (signatureActiveOrPending == null)
+            return;
+
+        signatureActiveOrPending.Cancel();
+
+        AddDomainEvent(new SignatureCanceledDomainEvent(
+            signatureActiveOrPending.Id,
+            signatureActiveOrPending.PlanId,
+            Id,
+            signatureActiveOrPending.StartDate ?? default,
+            signatureActiveOrPending.EndDate ?? default));
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        Regex regexEmail = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+
+        return regexEmail.IsMatch(email);
+    }
+
+    private static bool IsValidUserName(string userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+            return false;
+
+        Regex regexUserName = new(@"^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
+
+        return regexUserName.IsMatch(userName);
+    }
 }
