@@ -75,7 +75,7 @@ public sealed class Subscriber : AggregateRoot
         AddDomainEvent(new SignatureCanceledDomainEvent(
             signatureActiveOrPending.Id,
             signatureActiveOrPending.PlanId,
-            Id,
+            SubscriberId: Id,
             signatureActiveOrPending.StartDate ?? default,
             signatureActiveOrPending.EndDate ?? default));
     }
@@ -85,9 +85,7 @@ public sealed class Subscriber : AggregateRoot
         if (string.IsNullOrWhiteSpace(email))
             return false;
 
-        Regex regexEmail = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
-
-        return regexEmail.IsMatch(email);
+        return ValidationsRegex.EmailRegex().IsMatch(email);
     }
 
     private static bool IsValidUserName(string userName)
@@ -95,8 +93,15 @@ public sealed class Subscriber : AggregateRoot
         if (string.IsNullOrWhiteSpace(userName))
             return false;
 
-        Regex regexUserName = new(@"^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
-
-        return regexUserName.IsMatch(userName);
+        return ValidationsRegex.UserNameRegex().IsMatch(userName);
     }
+}
+
+public static partial class ValidationsRegex
+{
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled)]
+    public static partial Regex EmailRegex();
+
+    [GeneratedRegex(@"^[a-zA-Z0-9_]+$", RegexOptions.Compiled)]
+    public static partial Regex UserNameRegex();
 }
