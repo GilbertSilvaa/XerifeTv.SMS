@@ -1,20 +1,23 @@
-﻿using Subscribers.Domain.Enums;
+﻿using SharedKernel.Exceptions;
+using Subscribers.Domain.Enums;
 
 namespace Subscribers.Domain.Exceptions;
 
-public sealed class CannotActivateSignatureException : Exception
+public sealed class CannotActivateSignatureException : DomainException
 {
-	public Guid SignatureId { get; }
+    private const string ERROR_CODE = "CANNOT_ACTIVATE_SIGNATURE";
+
+    public Guid SignatureId { get; }
 	public ESignatureStatus? CurrentStatus { get; }
 
-	public CannotActivateSignatureException() : base("A assinatura não pode ser ativada.") { }
+	public CannotActivateSignatureException() : base(ERROR_CODE, "The subscription cannot be activated.") { }
 
 	public CannotActivateSignatureException(Guid signatureId, ESignatureStatus currentStatus) 
-		: base($"Não é possível ativar a assinatura '{signatureId}' porque o status atual é '{currentStatus}'.")
+		: base(ERROR_CODE, $"It is not possible to activate the signature '{signatureId}' because the current status is '{currentStatus}'.")
 	{
 		SignatureId = signatureId;
 		CurrentStatus = currentStatus;
 	}
 
-	public CannotActivateSignatureException(string message) : base(message) { }
+	public CannotActivateSignatureException(string message) : base(ERROR_CODE, message) { }
 }

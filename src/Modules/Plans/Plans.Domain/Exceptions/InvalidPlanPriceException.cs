@@ -1,6 +1,10 @@
-﻿namespace Plans.Domain.Exceptions;
+﻿using SharedKernel.Exceptions;
 
-public sealed class InvalidPlanPriceException : Exception
+namespace Plans.Domain.Exceptions;
+
+public sealed class InvalidPlanPriceException : DomainException
 {
-	public InvalidPlanPriceException() : base("The plan price must be greater than zero.") { }
+	private const string ERROR_CODE = "INVALID_PLAN_PRICE";
+
+    public InvalidPlanPriceException() : base(ERROR_CODE, "The plan price must be greater than zero.") { }
 }

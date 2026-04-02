@@ -1,13 +1,15 @@
 ﻿namespace SharedKernel.Exceptions;
 
-public sealed class ValidationException : Exception
+public sealed class ValidationException : DomainException
 {
+    private const string ERROR_CODE = "VALIDATION_ERROR";
+
     private List<string> _errors { get; set; } = [];
     public IReadOnlyList<string> Errors => _errors;
 
-    public ValidationException(string message) : base(message) { }
+    public ValidationException(string message) : base(ERROR_CODE, message) { }
 
-    public ValidationException(IEnumerable<string> errors) : base(string.Join('|', errors))
+    public ValidationException(IEnumerable<string> errors) : base(ERROR_CODE, string.Join('|', errors))
     {
         _errors = [.. errors];
     }

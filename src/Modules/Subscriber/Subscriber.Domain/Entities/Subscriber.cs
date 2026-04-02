@@ -25,10 +25,10 @@ public sealed class Subscriber : AggregateRoot
     public static Subscriber Create(string userName, string email)
     {
         if (!IsValidUserName(userName))
-            throw new ValidationException("O username fornecido é inválido.");
+            throw new ValidationException("The username provided is invalid.");
 
         if (!IsValidEmail(email))
-            throw new ValidationException("O email fornecido é inválido.");
+            throw new ValidationException("The E-mail provided is invalid.");
 
         var subscriber = new Subscriber(userName, email);
 

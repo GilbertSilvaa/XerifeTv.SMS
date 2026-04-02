@@ -1,6 +1,10 @@
-﻿namespace Plans.Domain.Exceptions;
+﻿using SharedKernel.Exceptions;
 
-public sealed class InvalidPlanSimultaneousScreensException : Exception
+namespace Plans.Domain.Exceptions;
+
+public sealed class InvalidPlanSimultaneousScreensException : DomainException
 {
-	public InvalidPlanSimultaneousScreensException(int screens) : base($"The number of simultaneous screens in a plan must be at least one. Value: {screens}") { }
+	private const string ERROR_CODE = "INVALID_PLAN_SCREENS";
+
+    public InvalidPlanSimultaneousScreensException(int screens) : base(ERROR_CODE, $"The number of simultaneous screens in a plan must be at least one. Value: {screens}") { }
 }

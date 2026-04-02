@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using SharedKernel.Exceptions;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Events;
 using Xunit;
 
 namespace Subscribers.Domain.Tests;
@@ -21,6 +22,7 @@ public class SubscriberTests
         subscriber.Email.Should().Be(email);
         subscriber.IsDeleted.Should().BeFalse();
         subscriber.Signatures.Should().BeEmpty();
+        subscriber.DomainEvents.OfType<SubscriberCreatedDomainEvent>().Should().ContainSingle();
     }
 
     [Fact]
@@ -32,7 +34,7 @@ public class SubscriberTests
         Action act = () => Subscriber.Create(username, email);
 
         act.Should().Throw<ValidationException>()
-            .WithMessage("O email fornecido é inválido.");
+            .WithMessage("The E-mail provided is invalid.");
     }
 
     [Theory]
@@ -47,6 +49,6 @@ public class SubscriberTests
         Action act = () => Subscriber.Create(username, email);
 
         act.Should().Throw<ValidationException>()
-            .WithMessage("O username fornecido é inválido.");
+            .WithMessage("The username provided is invalid.");
     }
 }

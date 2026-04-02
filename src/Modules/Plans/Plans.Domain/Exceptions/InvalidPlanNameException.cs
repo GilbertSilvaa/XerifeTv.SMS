@@ -1,6 +1,10 @@
-﻿namespace Plans.Domain.Exceptions;
+﻿using SharedKernel.Exceptions;
 
-public sealed class InvalidPlanNameException : Exception
+namespace Plans.Domain.Exceptions;
+
+public sealed class InvalidPlanNameException : DomainException
 {
-	public InvalidPlanNameException(string name) : base($"The plan name '{name}' must be at least 5 characters long.") { }
+	private const string ERROR_CODE = "INVALID_PLAN_NAME";
+
+    public InvalidPlanNameException(string name) : base(ERROR_CODE, $"The plan name '{name}' must be at least 5 characters long.") { }
 }

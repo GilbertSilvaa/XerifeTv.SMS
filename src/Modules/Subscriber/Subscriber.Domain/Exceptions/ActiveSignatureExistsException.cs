@@ -1,15 +1,19 @@
-﻿namespace Subscribers.Domain.Exceptions;
+﻿using SharedKernel.Exceptions;
 
-public sealed class ActiveSignatureExistsException : Exception
+namespace Subscribers.Domain.Exceptions;
+
+public sealed class ActiveSignatureExistsException : DomainException
 {
-	public Guid SubscriberId { get; }
+    private const string ERROR_CODE = "ACTIVE_SIGNATURE_EXISTS";
 
-	public ActiveSignatureExistsException() : base("O assinante já possui uma assinatura ativa.") { }
+    public Guid SubscriberId { get; }
 
-	public ActiveSignatureExistsException(Guid subscriberId) : base($"O assinante '{subscriberId}' já possui uma assinatura ativa.")
+	public ActiveSignatureExistsException() : base(ERROR_CODE, "The subscriber already has an active subscription.") { }
+
+	public ActiveSignatureExistsException(Guid subscriberId) : base(ERROR_CODE, $"The subscriber '{subscriberId}' already has an active subscription.")
 	{
 		SubscriberId = subscriberId;
 	}
 
-	public ActiveSignatureExistsException(string message) : base(message) { }
+	public ActiveSignatureExistsException(string message) : base(ERROR_CODE, message) { }
 }

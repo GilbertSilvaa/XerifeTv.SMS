@@ -1,6 +1,10 @@
-﻿namespace Plans.Domain.Exceptions;
+﻿using SharedKernel.Exceptions;
 
-public sealed class InvalidPlanDescriptionException : Exception
+namespace Plans.Domain.Exceptions;
+
+public sealed class InvalidPlanDescriptionException : DomainException
 {
-	public InvalidPlanDescriptionException() : base("The plan description must be at least 10 characters long.") { }
+	private const string ERROR_CODE = "INVALID_PLAN_DESCRIPTION";
+
+    public InvalidPlanDescriptionException() : base(ERROR_CODE, "The plan description must be at least 10 characters long.") { }
 }
