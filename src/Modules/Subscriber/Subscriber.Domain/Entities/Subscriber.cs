@@ -40,7 +40,7 @@ public sealed class Subscriber : AggregateRoot
     public override bool Delete()
     {
         if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
-            throw new ActiveSignatureExistsException("O assinante não pode ser deletado porque possui assinatura ativa.");
+            throw new ActiveSignatureExistsException("The subscriber cannot be deleted because they have an active subscription.");
 
         bool isDeleted = base.Delete();
 
@@ -52,6 +52,9 @@ public sealed class Subscriber : AggregateRoot
 
     public void AddSignature(Guid planId)
     {
+        if (planId == Guid.Empty)
+            throw new ValidationException("The plan provided is invalid.");
+
         if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
             throw new ActiveSignatureExistsException(Id);
 
