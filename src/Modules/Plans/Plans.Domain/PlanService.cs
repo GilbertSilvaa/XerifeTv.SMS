@@ -16,19 +16,19 @@ public sealed class PlanService
 	{
 		if (await _repository.ExistsByNameAsync(name))
 		{
-			Error error = new("PlanService.CreatePLanAsync", $"Plan with name '{name}' already exists.");
+			Error error = new("PlanService.PlanNameAlreadyExists", $"Plan with name '{name}' already exists.");
 			return Result<Plan>.Failure(error);
 		}
 
 		if (await _repository.ExistsByPriceAsync(price))
 		{
-			Error error = new("PlanService.CreatePLanAsync", $"Plan with price {price.Currency} {price.Amount} already exists.");
+			Error error = new("PlanService.PlanPriceAndCurrencyAlreadyExists", $"Plan with price {price.Currency} {price.Amount} already exists.");
 			return Result<Plan>.Failure(error);
 		}
 
 		if (await _repository.ExistsByScreensAsync(screens))
 		{
-			Error error = new("PlanService.CreatePLanAsync", $"Plan with {screens} screens already exists.");
+			Error error = new("PlanService.PlanScreensAlreadyExists", $"Plan with {screens} screens already exists.");
 			return Result<Plan>.Failure(error);
 		}
 
@@ -42,7 +42,7 @@ public sealed class PlanService
 							|| ex is InvalidPlanDescriptionException
 							|| ex is InvalidPlanSimultaneousScreensException)
 		{
-			Error error = new("PlanService.CreatePLanAsync", ex.InnerException?.Message ?? ex.Message);
+			Error error = new("PlanService.Error", ex.InnerException?.Message ?? ex.Message);
 			return Result<Plan>.Failure(error);
 		}
 	}
@@ -51,7 +51,7 @@ public sealed class PlanService
 	{
 		if (await _repository.ExistsByScreensAsync(newMaxSimultaneousScreens))
 		{
-			Error error = new("PlanService.CreatePLanAsync", $"Plan with {newMaxSimultaneousScreens} screens already exists.");
+			Error error = new("PlanService.PlanScreensAlreadyExists", $"Plan with {newMaxSimultaneousScreens} screens already exists.");
 			return Result<Plan>.Failure(error);
 		}
 
@@ -62,7 +62,7 @@ public sealed class PlanService
 		}
 		catch (InvalidPlanSimultaneousScreensException ex)
 		{
-			Error error = new("PlanService.CreatePLanAsync", ex.InnerException?.Message ?? ex.Message);
+			Error error = new("PlanService.Error", ex.InnerException?.Message ?? ex.Message);
 			return Result<Plan>.Failure(error);
 		}
 	}
@@ -71,7 +71,7 @@ public sealed class PlanService
 	{
 		if (await _repository.ExistsByPriceAsync(newPrice))
 		{
-			Error error = new("PlanService.CreatePLanAsync", $"Plan with price {newPrice.Currency} {newPrice.Amount} already exists.");
+			Error error = new("PlanService.PlanPriceAndCurrencyAlreadyExists", $"Plan with price {newPrice.Currency} {newPrice.Amount} already exists.");
 			return Result<Plan>.Failure(error);
 		}
 
@@ -82,7 +82,7 @@ public sealed class PlanService
 		}
 		catch (InvalidPlanPriceException ex)
 		{
-			Error error = new("PlanService.CreatePLanAsync", ex.InnerException?.Message ?? ex.Message);
+			Error error = new("PlanService.Error", ex.InnerException?.Message ?? ex.Message);
 			return Result<Plan>.Failure(error);
 		}
 	}

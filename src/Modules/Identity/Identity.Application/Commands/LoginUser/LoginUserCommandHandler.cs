@@ -27,7 +27,7 @@ internal sealed class LoginUserCommandHandler : ICommandHandler<LoginUserCommand
 		var user = await _userManager.FindByNameAsync(request.UserName);
 
 		if (user == null)
-			return Result<LoginUserCommandResponse>.Failure(new Error("LoginUserCommandHandler.Handle", "Unauthorized"));
+			return Result<LoginUserCommandResponse>.Failure(new Error("LoginUser.Unauthorized", "Unauthorized"));
 
 		var result = await _signInManager.CheckPasswordSignInAsync(
 			user,
@@ -35,7 +35,7 @@ internal sealed class LoginUserCommandHandler : ICommandHandler<LoginUserCommand
 			lockoutOnFailure: true);
 
 		if (!result.Succeeded)
-			return Result<LoginUserCommandResponse>.Failure(new Error("LoginUserCommandHandler.Handle", "Unauthorized"));
+			return Result<LoginUserCommandResponse>.Failure(new Error("LoginUser.Unauthorized", "Unauthorized"));
 
 		var roles = await _userManager.GetRolesAsync(user);
 

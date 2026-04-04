@@ -35,7 +35,7 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 		if (!result.Succeeded)
 		{
 			string errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
-			return Result.Failure(new Error("RegisterUserCommandHandler.Handle", errorMessage));
+			return Result.Failure(new Error("RegisterUser.Error", errorMessage));
 		}
 
 		if (!await _roleManager.RoleExistsAsync(request.Role.ToString()))
@@ -51,6 +51,6 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 			return Result.Success();
 		}
 		
-		return Result.Failure(new Error("RegisterUserCommandHandler.Handle", "Failed to assign role to user."));
+		return Result.Failure(new Error("RegisterUser.FailedAssignRole", "Failed to assign role to user."));
     }
 }

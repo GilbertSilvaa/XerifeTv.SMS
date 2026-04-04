@@ -1,8 +1,8 @@
 ﻿using BuildingBlocks.Core;
 using BuildingBlocks.Core.CQRS;
 using SharedKernel;
-using Subscribers.Domain;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Repositories;
 
 namespace Subscribers.Application.Commands.CreateSubscriber;
 

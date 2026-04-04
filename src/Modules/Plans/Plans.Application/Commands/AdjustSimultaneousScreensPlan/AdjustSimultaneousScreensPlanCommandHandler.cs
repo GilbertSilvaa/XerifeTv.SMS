@@ -24,7 +24,7 @@ internal sealed class AdjustSimultaneousScreensPlanCommandHandler : ICommandHand
 
 		if (plan == null)
 		{
-			Error error = new("AdjustSimultaneousScreensPlanCommandHandler.Handle", "Plan not found in database.");
+			Error error = new("AdjustSimultaneousScreensPlan.PlanNotFound", "Plan not found in database.");
 			return Result.Failure(error);
 		}
 

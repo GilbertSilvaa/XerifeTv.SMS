@@ -4,7 +4,7 @@ namespace BuildingBlocks.Core;
 
 public sealed class ValidationResult : Result
 {
-	private ValidationResult(Error[] errors) : base(false, new Error("ValidationResult"))
+	private ValidationResult(Error[] errors) : base(false, new Error("ValidationResult.Errors"))
 	{
 		Errors = errors;
 	}

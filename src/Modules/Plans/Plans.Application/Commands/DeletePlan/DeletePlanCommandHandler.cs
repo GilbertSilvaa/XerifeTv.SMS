@@ -22,7 +22,7 @@ internal sealed class DeletePlanCommandHandler : ICommandHandler<DeletePlanComma
 
 		if (plan == null)
 		{
-			Error error = new("DeletePlanCommandHandler.Handle", "Plan not found in database.");
+			Error error = new("DeletePlan.PlanNotFound", "Plan not found in database.");
 			return Result.Failure(error);
 		}
 

@@ -50,15 +50,15 @@ public sealed class Subscriber : AggregateRoot
         return isDeleted;
     }
 
-    public void AddSignature(Guid planId)
+    public void AddSignature(PlanItemCatalog plan)
     {
-        if (planId == Guid.Empty)
+        if (plan.Id == Guid.Empty)
             throw new ValidationException("The plan provided is invalid.");
 
         if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
             throw new ActiveSignatureExistsException(Id);
 
-        var signature = Signature.Create(planId, Id);
+        var signature = Signature.Create(plan.Id, Id);
 
         _signatures.Add(signature);
         AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.PlanId, Id));

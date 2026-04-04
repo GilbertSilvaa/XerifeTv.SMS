@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using SharedKernel;
 using SharedKernel.Exceptions;
 using Subscribers.Domain.Entities;
 using Subscribers.Domain.Enums;
@@ -13,11 +14,14 @@ public class SubscriberTests
     [Fact]
     public void Should_CreateSubscriber_When_DataIsValid()
     {
+        // Arrange
         string username = "username_test";
         string email = "email@example.com";
 
+        // Act
         var subscriber = Subscriber.Create(username, email);
 
+        // Assert
         subscriber.Should().NotBeNull();
         subscriber.Id.Should().NotBe(Guid.Empty);
         subscriber.UserName.Should().Be(username);
@@ -30,11 +34,14 @@ public class SubscriberTests
     [Fact]
     public void Shoud_ThrowValidationException_When_EmailIsInvalid()
     {
+        // Arrange
         string username = "username_test";
         string email = "invalid_email";
 
+        // Act
         Action act = () => Subscriber.Create(username, email);
 
+        // Assert
         act.Should().Throw<ValidationException>()
             .WithMessage("The E-mail provided is invalid.");
     }
@@ -46,10 +53,13 @@ public class SubscriberTests
     [InlineData("user@name")]
     public void Shoud_ThrowValidationException_When_UserNameIsInvalid(string username)
     {
+        // Arrange
         string email = "email@example.com";
 
+        // Act
         Action act = () => Subscriber.Create(username, email);
 
+        // Assert
         act.Should().Throw<ValidationException>()
             .WithMessage("The username provided is invalid.");
     }
@@ -57,13 +67,22 @@ public class SubscriberTests
     [Fact]
     public void Shoud_AddSignature_When_SignatureIsValid()
     {
+        // Arrange
         string username = "username_test";
         string email = "email@example.com";
+
         Guid planId = Guid.NewGuid();
+        string planName = "Test Plan";
+        int planMaxSimultaneousScreens = 4;
+        Money planPrice = Money.From(9.99m, "USD");
+
+        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email);
 
-        subscriber.AddSignature(planId);
+        // Act
+        subscriber.AddSignature(plan);
 
+        // Assert
         subscriber.Signatures.Should().ContainSingle(s => s.PlanId == planId);
         subscriber.DomainEvents.OfType<SignatureAddedDomainEvent>().Should().ContainSingle(e => e.PlanId == planId);
     }
@@ -74,13 +93,22 @@ public class SubscriberTests
     [InlineData("00000000-0000-0000-0000-000000000000")]
     public void Shoud_ThrowValidationException_When_PlanIdIsInvalid(string planIdStr)
     {
+        // Arrange
         string username = "username_test";
         string email = "email@example.com";
+
         Guid planId = Guid.TryParse(planIdStr, out var parsedPlanId) ? parsedPlanId : Guid.Empty;
+        string planName = "Test Plan";
+        int planMaxSimultaneousScreens = 4;
+        Money planPrice = Money.From(9.99m, "USD");
+
+        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email);
 
-        Action act = () => subscriber.AddSignature(planId);
+        // Act
+        Action act = () => subscriber.AddSignature(plan);
 
+        // Assert
         act.Should().Throw<ValidationException>()
             .WithMessage("The plan provided is invalid.");
     }
@@ -88,16 +116,28 @@ public class SubscriberTests
     [Fact]
     public void Shoud_ThrowActiveSignatureExistsException_When_AddingSignatureWithActiveSignature()
     {
+        // Arrange
         string username = "username_test";
         string email = "email@example.com";
+
         var subscriber = Subscriber.Create(username, email);
 
+        Guid planId = Guid.NewGuid();
+        string planName = "Test Plan";
+        int planMaxSimultaneousScreens = 4;
+        Money planPrice = Money.From(9.99m, "USD");
+
+        var plan1 = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
+        var plan2 = new PlanItemCatalog(Guid.NewGuid(), "Another Plan", 2, Money.From(4.99m, "USD"));
+
+        // Act
         Action act = () =>
         {
-            subscriber.AddSignature(Guid.NewGuid());
-            subscriber.AddSignature(Guid.NewGuid());
+            subscriber.AddSignature(plan1);
+            subscriber.AddSignature(plan2);
         };
 
+        // Assert
         act.Should().Throw<ActiveSignatureExistsException>()
             .WithMessage($"The subscriber '{subscriber.Id}' already has an active subscription.");
     }
@@ -105,13 +145,24 @@ public class SubscriberTests
     [Fact]
     public void Should_CancelSignature_When_SingleSignatureIsActive()
     {
+        // Arrange
         string username = "username_test";
         string email = "email@example.com";
+
+        Guid planId = Guid.NewGuid();
+        string planName = "Test Plan";
+        int planMaxSimultaneousScreens = 4;
+        Money planPrice = Money.From(9.99m, "USD");
+
+        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
+
         var subscriber = Subscriber.Create(username, email);
-        subscriber.AddSignature(Guid.NewGuid());
-        
+        subscriber.AddSignature(plan);
+
+        // Act
         subscriber.CancelSignature();
 
+        // Assert
         subscriber.Signatures.Should().ContainSingle(s => s.Status == ESignatureStatus.CANCELLED);
         subscriber.DomainEvents.OfType<SignatureCanceledDomainEvent>().Should().ContainSingle();
     }

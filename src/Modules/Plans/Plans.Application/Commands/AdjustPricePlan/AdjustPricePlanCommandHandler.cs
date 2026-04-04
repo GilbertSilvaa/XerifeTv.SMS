@@ -24,7 +24,7 @@ internal sealed class AdjustPricePlanCommandHandler : ICommandHandler<AdjustPric
 
 		if (plan == null)
 		{
-			Error error = new("AdjustPricePlanCommandHandler.Handle", "Plan not found in database.");
+			Error error = new("AdjustPricePlan.PlanNotFound", "Plan not found in database.");
 			return Result.Failure(error);
 		}
 

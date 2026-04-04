@@ -1,6 +1,6 @@
 ﻿using BuildingBlocks.Infrastructure;
-using Subscribers.Domain;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Repositories;
 using Subscribers.Infrastructure.Persistence.Database;
 
 namespace Subscribers.Infrastructure.Persistence.Repositories;

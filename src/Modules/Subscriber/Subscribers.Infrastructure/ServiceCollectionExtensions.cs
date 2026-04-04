@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Subscribers.Domain;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Repositories;
 using Subscribers.Infrastructure.Persistence;
 using Subscribers.Infrastructure.Persistence.Database;
 using Subscribers.Infrastructure.Persistence.Repositories;
