@@ -1,6 +1,7 @@
 ﻿using BuildingBlocks.Core;
 using BuildingBlocks.Core.CQRS;
 using SharedKernel;
+using SharedKernel.Exceptions;
 using Subscribers.Domain.Entities;
 using Subscribers.Domain.Repositories;
 
@@ -19,11 +20,18 @@ internal sealed class CreateSuscriberCommandHandler : ICommandHandler<CreateSubs
 
     public async Task<Result> Handle(CreateSubscriberCommand request, CancellationToken cancellationToken)
     {
-        var subscriber = Subscriber.Create(request.UserName, request.Email);
+        try
+        {
+            var subscriber = Subscriber.Create(request.UserName, request.Email);
 
-        await _repository.AddOrUpdateAsync(subscriber);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _repository.AddOrUpdateAsync(subscriber);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+            return Result.Success();
+        }
+        catch (DomainException ex)
+        {
+            return Result.Failure(new Error(ex.Code, ex.Message));
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace Subscribers.Domain.Exceptions;
 
 public sealed class ActiveSignatureExistsException : DomainException
 {
-    private const string ERROR_CODE = "ACTIVE_SIGNATURE_EXISTS";
+    private const string ERROR_CODE = "Subscriber.SignatureActiveExists";
 
     public Guid SubscriberId { get; }
 

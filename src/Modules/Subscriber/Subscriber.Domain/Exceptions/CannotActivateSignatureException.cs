@@ -5,7 +5,7 @@ namespace Subscribers.Domain.Exceptions;
 
 public sealed class CannotActivateSignatureException : DomainException
 {
-    private const string ERROR_CODE = "CANNOT_ACTIVATE_SIGNATURE";
+    private const string ERROR_CODE = "Subscriber.CannotActivateSignature";
 
     public Guid SignatureId { get; }
 	public ESignatureStatus? CurrentStatus { get; }

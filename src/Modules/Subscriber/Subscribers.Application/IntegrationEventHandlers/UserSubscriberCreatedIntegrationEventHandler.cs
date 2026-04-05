@@ -13,7 +13,7 @@ internal sealed class UserSubscriberCreatedIntegrationEventHandler : IIntegratio
     private readonly IIntegrationEventPublisher _integrationEventPublisher;
 
     public UserSubscriberCreatedIntegrationEventHandler(
-        IMediator mediator, 
+        IMediator mediator,
         IIntegrationEventPublisher integrationEventPublisher)
     {
         _mediator = mediator;
@@ -22,14 +22,13 @@ internal sealed class UserSubscriberCreatedIntegrationEventHandler : IIntegratio
 
     public async Task Handle(UserSubscriberCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        try
+
+        var command = new CreateSubscriberCommand(notification.UserName, notification.Email);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
         {
-            var command = new CreateSubscriberCommand(notification.UserName, notification.Email);
-            await _mediator.Send(command, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            string errorMessage = $"UserSubscriberCreatedIntegrationEventHandler.Error: {ex.Message}";
+            string errorMessage = $"UserSubscriberCreatedIntegrationEventHandler.Error: {result.Error.Description}";
             SubscriberCreationFailedIntegrationEvent integrationEvent = new(notification.Email, notification.UserName, errorMessage);
             await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
         }

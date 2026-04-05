@@ -4,7 +4,7 @@ namespace Plans.Domain.Exceptions;
 
 public sealed class InvalidPlanPriceException : DomainException
 {
-	private const string ERROR_CODE = "INVALID_PLAN_PRICE";
+	private const string ERROR_CODE = "Plan.InvalidPrice";
 
     public InvalidPlanPriceException() : base(ERROR_CODE, "The plan price must be greater than zero.") { }
 }

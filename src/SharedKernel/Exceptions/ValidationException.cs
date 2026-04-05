@@ -2,7 +2,7 @@
 
 public sealed class ValidationException : DomainException
 {
-    private const string ERROR_CODE = "VALIDATION_ERROR";
+    private const string ERROR_CODE = "Validation.Error";
 
     private List<string> _errors { get; set; } = [];
     public IReadOnlyList<string> Errors => _errors;

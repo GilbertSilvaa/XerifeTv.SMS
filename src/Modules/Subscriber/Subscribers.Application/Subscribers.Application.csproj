@@ -10,6 +10,8 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\Subscriber.Domain\Subscribers.Domain.csproj" />
+	  
+	<InternalsVisibleTo Include="Subscribers.Application.Tests" />
   </ItemGroup>
 
 </Project>

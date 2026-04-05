@@ -5,7 +5,7 @@ namespace Subscribers.Domain.Exceptions;
 
 public sealed class CannotUpdateRenewalDateSignatureException : DomainException
 {
-    private const string ERROR_CODE = "CANNOT_UPDATE_RENEWAL_DATA";
+    private const string ERROR_CODE = "Subscriber.CannotUpdateRenewalData";
 
     public Guid SignatureId { get; }
     public ESignatureStatus? CurrentStatus { get; }

@@ -1,0 +1,152 @@
+﻿using BuildingBlocks.Core;
+using Moq;
+using SharedKernel;
+using Subscribers.Application.Commands.AddSignature;
+using Subscribers.Domain.Entities;
+using Subscribers.Domain.Repositories;
+using Xunit;
+using FluentAssertions;
+
+namespace Subscribers.Application.Tests;
+
+public class AddSignatureUseCaseTests
+{
+    private readonly Mock<ISubscriberRepository> _subscriberRepositoryMock;
+    private readonly Mock<IPlanCatalogRepository> _planCatalogRepositoryMock;
+    private readonly Mock<IUnitOfWork<Subscriber>> _unitOfWorkMock;
+    private readonly AddSignatureCommandHandler _handler;
+
+    public AddSignatureUseCaseTests()
+    {
+        _subscriberRepositoryMock = new Mock<ISubscriberRepository>();
+        _planCatalogRepositoryMock = new Mock<IPlanCatalogRepository>();
+        _unitOfWorkMock = new Mock<IUnitOfWork<Subscriber>>();
+
+        _handler = new AddSignatureCommandHandler(
+            _subscriberRepositoryMock.Object,
+            _planCatalogRepositoryMock.Object,
+            _unitOfWorkMock.Object
+        );
+    }
+
+    [Fact]
+    public async Task Should_ReturnSuccess_When_SubscriberExistsAndPlanFoundAndSignatureAdded()
+    {
+        // Arrange
+        var subscriberId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+
+        var command = new AddSignatureCommand(subscriberId, planId);
+
+        var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
+        _planCatalogRepositoryMock
+            .Setup(x => x.GetByIdAsync(planId))
+            .ReturnsAsync(planItem);
+
+        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com");
+
+        _subscriberRepositoryMock
+            .Setup(r => r.GetByIdAsync(subscriberId))
+            .ReturnsAsync(subscriberMock);
+
+        _unitOfWorkMock
+            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask)
+            .Verifiable();
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.IsFailure.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Should_ReturnFailure_When_SubscriberNotFound()
+    {
+        // Arrange
+        var subscriberId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+
+        var command = new AddSignatureCommand(subscriberId, planId);
+
+        _subscriberRepositoryMock
+            .Setup(r => r.GetByIdAsync(subscriberId))
+            .ReturnsAsync((Subscriber?)null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
+
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be("AddSignature.SubscriberNotFound");
+    }
+
+    [Fact]
+    public async Task Should_ReturnFailure_When_PlanNotFound()
+    {
+        // Arrange
+        var subscriberId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+
+        var command = new AddSignatureCommand(subscriberId, planId);
+
+        var subscriber = Subscriber.Create("subscriber_test", "email@xample.com");
+
+        _subscriberRepositoryMock
+            .Setup(r => r.GetByIdAsync(subscriberId))
+            .ReturnsAsync(subscriber);
+
+        _planCatalogRepositoryMock
+            .Setup(p => p.GetByIdAsync(planId))
+            .ReturnsAsync((PlanItemCatalog?)null);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
+
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be("PlanResolver.PlanNotFound");
+    }
+
+    [Fact]
+    public async Task Should_ReturnFailure_When_SubscriberThrowsDomainError()
+    {
+        // Arrange
+        var subscriberId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+
+        var command = new AddSignatureCommand(subscriberId, planId);
+
+        var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
+
+        _planCatalogRepositoryMock
+            .Setup(x => x.GetByIdAsync(planId))
+            .ReturnsAsync(planItem);
+
+        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com");
+        subscriberMock.AddSignature(planItem);
+
+        _subscriberRepositoryMock
+            .Setup(r => r.GetByIdAsync(subscriberId))
+            .ReturnsAsync(subscriberMock);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
+
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be("Subscriber.SignatureActiveExists");
+        result.Error.Description.Should().Contain("already has an active subscription");
+    }
+}
