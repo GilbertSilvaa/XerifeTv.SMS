@@ -17,6 +17,7 @@ public class SubscriberDbContext : ApplicationDbContext
     {
         modelBuilder.ApplyConfiguration(new SubscriberConfiguration());
         modelBuilder.ApplyConfiguration(new SignatureConfiguration());
+        modelBuilder.ApplyConfiguration(new PlanCatalogConfiguration());
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Subscriber>().HasQueryFilter(p => !p.IsDeleted);

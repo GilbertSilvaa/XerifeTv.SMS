@@ -67,7 +67,7 @@ public class PlanResolverTests
         Money planPrice = Money.From(9.99m, "USD");
 
         var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
-        plan.Disable();
+        plan.Delete();
 
         var repoMock = new Mock<IPlanCatalogRepository>();
         repoMock.Setup(r => r.GetByIdAsync(planId))

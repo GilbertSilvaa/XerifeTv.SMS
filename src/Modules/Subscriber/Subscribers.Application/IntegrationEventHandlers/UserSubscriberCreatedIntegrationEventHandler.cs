@@ -22,7 +22,6 @@ internal sealed class UserSubscriberCreatedIntegrationEventHandler : IIntegratio
 
     public async Task Handle(UserSubscriberCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-
         var command = new CreateSubscriberCommand(notification.UserName, notification.Email);
         var result = await _mediator.Send(command, cancellationToken);
 
