@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
-using Plans.Application.Abstractions;
-using Plans.Application.Abstractions.DTOs;
+using Plans.Application.Queries.ReadModels;
 using System.Text.Json;
 
 namespace Plans.Infrastructure.Persistence.Repositories;

@@ -1,6 +1,6 @@
 ﻿namespace SharedKernel;
 
-public interface IRepository<T> where T : Entity
+public interface IRepository<T> where T : AggregateRoot
 {
 	public Task AddOrUpdateAsync(T entity);
 	public Task RemoveAsync(Guid id);

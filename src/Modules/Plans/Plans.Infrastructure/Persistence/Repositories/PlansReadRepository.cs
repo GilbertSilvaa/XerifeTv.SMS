@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Plans.Application.Abstractions;
-using Plans.Application.Abstractions.DTOs;
+using Plans.Application.Queries.ReadModels;
 using Plans.Domain;
 using Plans.Infrastructure.Persistence.Database;
 

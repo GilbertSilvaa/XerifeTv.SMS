@@ -1,6 +1,4 @@
-﻿using Plans.Application.Abstractions.DTOs;
-
-namespace Plans.Application.Abstractions;
+﻿namespace Plans.Application.Queries.ReadModels;
 
 public interface IPlansReadRepository
 {

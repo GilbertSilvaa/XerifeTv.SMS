@@ -1,5 +1,5 @@
 ﻿using BuildingBlocks.Core.CQRS;
-using Plans.Application.Abstractions.DTOs;
+using Plans.Application.Queries.ReadModels;
 using SharedKernel;
 
 namespace Plans.Application.Queries.GetPlanById;
