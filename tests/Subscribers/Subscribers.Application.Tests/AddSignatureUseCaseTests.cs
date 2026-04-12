@@ -6,6 +6,7 @@ using Subscribers.Domain.Entities;
 using Subscribers.Domain.Repositories;
 using Xunit;
 using FluentAssertions;
+using Subscribers.Application.PlanCatalog;
 
 namespace Subscribers.Application.Tests;
 
@@ -113,7 +114,7 @@ public class AddSignatureUseCaseTests
         result.IsSuccess.Should().BeFalse();
 
         result.Error.Should().NotBeNull();
-        result.Error.Code.Should().Be("PlanResolver.PlanNotFound");
+        result.Error.Code.Should().Be("AddSignature.PlanNotFound");
     }
 
     [Fact]
@@ -132,7 +133,7 @@ public class AddSignatureUseCaseTests
             .ReturnsAsync(planItem);
 
         var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com");
-        subscriberMock.AddSignature(planItem);
+        subscriberMock.AddSignature(planItem.ToPlanSnapshot());
 
         _subscriberRepositoryMock
             .Setup(r => r.GetByIdAsync(subscriberId))

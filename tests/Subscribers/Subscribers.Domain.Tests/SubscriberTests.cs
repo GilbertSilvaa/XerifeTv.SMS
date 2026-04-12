@@ -5,6 +5,7 @@ using Subscribers.Domain.Entities;
 using Subscribers.Domain.Enums;
 using Subscribers.Domain.Events;
 using Subscribers.Domain.Exceptions;
+using Subscribers.Domain.ValueObjects;
 using Xunit;
 
 namespace Subscribers.Domain.Tests;
@@ -76,14 +77,14 @@ public class SubscriberTests
         int planMaxSimultaneousScreens = 4;
         Money planPrice = Money.From(9.99m, "USD");
 
-        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
+        var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email);
 
         // Act
         subscriber.AddSignature(plan);
 
         // Assert
-        subscriber.Signatures.Should().ContainSingle(s => s.PlanId == planId);
+        subscriber.Signatures.Should().ContainSingle(s => s.Plan.PlanId == planId);
         subscriber.DomainEvents.OfType<SignatureAddedDomainEvent>().Should().ContainSingle(e => e.PlanId == planId);
     }
 
@@ -102,7 +103,7 @@ public class SubscriberTests
         int planMaxSimultaneousScreens = 4;
         Money planPrice = Money.From(9.99m, "USD");
 
-        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
+        var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email);
 
         // Act
@@ -127,8 +128,8 @@ public class SubscriberTests
         int planMaxSimultaneousScreens = 4;
         Money planPrice = Money.From(9.99m, "USD");
 
-        var plan1 = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
-        var plan2 = new PlanItemCatalog(Guid.NewGuid(), "Another Plan", 2, Money.From(4.99m, "USD"));
+        var plan1 = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
+        var plan2 = new PlanSnapshot(Guid.NewGuid(), "Another Plan", 2, Money.From(4.99m, "USD"));
 
         // Act
         Action act = () =>
@@ -154,7 +155,7 @@ public class SubscriberTests
         int planMaxSimultaneousScreens = 4;
         Money planPrice = Money.From(9.99m, "USD");
 
-        var plan = new PlanItemCatalog(planId, planName, planMaxSimultaneousScreens, planPrice);
+        var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
 
         var subscriber = Subscriber.Create(username, email);
         subscriber.AddSignature(plan);
