@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Subscribers.Application.PlanCatalog;
 using Subscribers.Domain.Entities;
 using Subscribers.Domain.Repositories;
 using Subscribers.Infrastructure.Persistence;
@@ -15,6 +16,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddModuleSubscriberInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<ISubscriberRepository, SubscriberRepository>();
+        services.AddScoped<IPlanCatalogRepository, PlanCatalogRepository>();
         services.AddScoped<IUnitOfWork<Subscriber>, SubscriberUnitOfWork>();
 
         services.AddDbContextFactory<SubscriberDbContext>((serviceProvider, options) =>

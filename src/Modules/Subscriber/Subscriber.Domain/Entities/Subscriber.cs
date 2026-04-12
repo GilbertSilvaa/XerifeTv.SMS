@@ -2,6 +2,7 @@
 using SharedKernel.Exceptions;
 using Subscribers.Domain.Events;
 using Subscribers.Domain.Exceptions;
+using Subscribers.Domain.ValueObjects;
 using System.Text.RegularExpressions;
 
 namespace Subscribers.Domain.Entities;
@@ -50,18 +51,18 @@ public sealed class Subscriber : AggregateRoot
         return isDeleted;
     }
 
-    public void AddSignature(PlanItemCatalog plan)
+    public void AddSignature(PlanSnapshot plan)
     {
-        if (plan.Id == Guid.Empty)
+        if (plan.PlanId == Guid.Empty)
             throw new ValidationException("The plan provided is invalid.");
 
         if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
             throw new ActiveSignatureExistsException(Id);
 
-        var signature = Signature.Create(plan.Id, Id);
+        var signature = Signature.Create(plan, subscriberId: Id);
 
         _signatures.Add(signature);
-        AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.PlanId, Id));
+        AddDomainEvent(new SignatureAddedDomainEvent(signature.Id, signature.Plan.PlanId, Id));
     }
 
     public void CancelSignature()
@@ -77,7 +78,7 @@ public sealed class Subscriber : AggregateRoot
 
         AddDomainEvent(new SignatureCanceledDomainEvent(
             signatureActiveOrPending.Id,
-            signatureActiveOrPending.PlanId,
+            signatureActiveOrPending.Plan.PlanId,
             SubscriberId: Id,
             signatureActiveOrPending.StartDate ?? default,
             signatureActiveOrPending.EndDate ?? default));

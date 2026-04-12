@@ -12,8 +12,15 @@ public class SignatureConfiguration : IEntityTypeConfiguration<Signature>
         builder.Property(x => x.Id).ValueGeneratedNever();      
         builder.Property(x => x.SubscriberId).IsRequired();
         builder.HasIndex(x => x.SubscriberId);
-        builder.Property(x => x.PlanId).IsRequired();
-        builder.HasIndex(x => x.PlanId);
+
+        builder.ComplexProperty(x => x.Plan, plan =>
+        {
+            plan.Property(p => p.PlanId).IsRequired();
+            plan.Property(p => p.Name).IsRequired();
+            plan.Property(p => p.Screens).IsRequired();
+            plan.ComplexProperty(p => p.Price).IsRequired();
+        });
+
         builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.StartDate);
         builder.Property(x => x.EndDate);

@@ -2,7 +2,7 @@
 
 namespace BuildingBlocks.Infrastructure;
 
-public abstract class BaseRepository<T> : IRepository<T> where T : Entity
+public abstract class BaseRepository<T> : IRepository<T> where T : AggregateRoot
 {
     private readonly DbContext _dbContext;
     private readonly DbSet<T> _dataSet;

@@ -1,6 +1,7 @@
 ﻿using SharedKernel;
 using Subscribers.Domain.Enums;
 using Subscribers.Domain.Exceptions;
+using Subscribers.Domain.ValueObjects;
 
 namespace Subscribers.Domain.Entities;
 
@@ -8,8 +9,8 @@ public sealed class Signature : Entity
 {
 	private const int RENEWAL_PERIOD_IN_DAYS = 30;
 
-	public Guid PlanId { get; private set; }
-	public Guid SubscriberId { get; private set; }
+	public PlanSnapshot Plan { get; private set; } = default!;
+    public Guid SubscriberId { get; private set; }
 	public ESignatureStatus Status { get; private set; }
 	public DateTime? StartDate { get; private set; }
 	public DateTime? EndDate { get; private set; }
@@ -17,16 +18,16 @@ public sealed class Signature : Entity
 
 	private Signature() { }
 
-	private Signature(Guid planId, Guid subscriberId)
+	private Signature(PlanSnapshot plan, Guid subscriberId)
 	{
-		PlanId = planId;
+		Plan = plan;
 		SubscriberId = subscriberId;
 		Status = ESignatureStatus.PENDING_PAYMENT;
 	}
 
-	public static Signature Create(Guid planId, Guid subscriberId)
+	public static Signature Create(PlanSnapshot plan, Guid subscriberId)
 	{
-		var signature = new Signature(planId, subscriberId);
+		var signature = new Signature(plan, subscriberId);
 		return signature;
 	}
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Subscribers.Domain.Entities;
+using Subscribers.Application.PlanCatalog;
 
 namespace Subscribers.Infrastructure.Persistence.Database;
 
