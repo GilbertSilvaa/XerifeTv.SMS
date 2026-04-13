@@ -3,4 +3,4 @@ using SharedKernel;
 
 namespace Subscribers.Application.Commands.CreateSubscriber;
 
-public sealed record CreateSubscriberCommand(string UserName, string Email) : ICommand<Result>;
+public sealed record CreateSubscriberCommand(string UserName, string Email, Guid IdentityUserId) : ICommand<Result>;

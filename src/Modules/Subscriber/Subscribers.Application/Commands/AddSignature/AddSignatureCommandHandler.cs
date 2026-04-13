@@ -28,7 +28,7 @@ internal sealed class AddSignatureCommandHandler : ICommandHandler<AddSignatureC
     {
         try
         {
-            var subscriber = await _subscriberRepository.GetByIdAsync(request.SubscriberId);
+            var subscriber = await _subscriberRepository.GetByIdentityUserIdAsync(request.IdentityUserId);
             var plan = await _planCatalogRepository.GetByIdAsync(request.PlanId);
 
             if (subscriber == null)

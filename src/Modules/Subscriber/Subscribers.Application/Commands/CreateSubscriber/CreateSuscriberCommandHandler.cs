@@ -22,7 +22,7 @@ internal sealed class CreateSuscriberCommandHandler : ICommandHandler<CreateSubs
     {
         try
         {
-            var subscriber = Subscriber.Create(request.UserName, request.Email);
+            var subscriber = Subscriber.Create(request.UserName, request.Email, request.IdentityUserId);
 
             await _repository.AddOrUpdateAsync(subscriber);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

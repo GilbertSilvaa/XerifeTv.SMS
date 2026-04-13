@@ -14,6 +14,8 @@ public class SubscriberConfiguration : IEntityTypeConfiguration<Subscriber>
         builder.HasIndex(x => x.UserName).IsUnique();
         builder.Property(x => x.Email).IsRequired().HasMaxLength(255);
         builder.HasIndex(x => x.Email).IsUnique();
+        builder.Property(x => x.IdentityUserId).ValueGeneratedNever();
+        builder.HasIndex(x => x.IdentityUserId).IsUnique();
 
         builder.HasMany(x => x.Signatures)
             .WithOne()

@@ -45,7 +45,7 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 
 		if (addRoleResult.Succeeded && request.Role == Enums.EUserRole.SUBSCRIBER)
 		{
-			var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName);
+			var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName, Guid.Parse(user.Id));
 			await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
 
 			return Result.Success();

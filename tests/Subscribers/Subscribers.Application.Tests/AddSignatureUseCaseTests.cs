@@ -34,20 +34,20 @@ public class AddSignatureUseCaseTests
     public async Task Should_ReturnSuccess_When_SubscriberExistsAndPlanFoundAndSignatureAdded()
     {
         // Arrange
-        var subscriberId = Guid.NewGuid();
+        Guid identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
 
-        var command = new AddSignatureCommand(subscriberId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId);
 
         var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
         _planCatalogRepositoryMock
             .Setup(x => x.GetByIdAsync(planId))
             .ReturnsAsync(planItem);
 
-        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com");
+        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com", identityUserId);
 
         _subscriberRepositoryMock
-            .Setup(r => r.GetByIdAsync(subscriberId))
+            .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
             .ReturnsAsync(subscriberMock);
 
         _unitOfWorkMock
@@ -67,13 +67,13 @@ public class AddSignatureUseCaseTests
     public async Task Should_ReturnFailure_When_SubscriberNotFound()
     {
         // Arrange
-        var subscriberId = Guid.NewGuid();
+        Guid identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
 
-        var command = new AddSignatureCommand(subscriberId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId);
 
         _subscriberRepositoryMock
-            .Setup(r => r.GetByIdAsync(subscriberId))
+            .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
             .ReturnsAsync((Subscriber?)null);
 
         // Act
@@ -91,15 +91,15 @@ public class AddSignatureUseCaseTests
     public async Task Should_ReturnFailure_When_PlanNotFound()
     {
         // Arrange
-        var subscriberId = Guid.NewGuid();
+        var identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
 
-        var command = new AddSignatureCommand(subscriberId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId);
 
-        var subscriber = Subscriber.Create("subscriber_test", "email@xample.com");
+        var subscriber = Subscriber.Create("subscriber_test", "email@xample.com", identityUserId);
 
         _subscriberRepositoryMock
-            .Setup(r => r.GetByIdAsync(subscriberId))
+            .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
             .ReturnsAsync(subscriber);
 
         _planCatalogRepositoryMock
@@ -121,10 +121,10 @@ public class AddSignatureUseCaseTests
     public async Task Should_ReturnFailure_When_SubscriberThrowsDomainError()
     {
         // Arrange
-        var subscriberId = Guid.NewGuid();
+        var identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
 
-        var command = new AddSignatureCommand(subscriberId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId);
 
         var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
 
@@ -132,11 +132,11 @@ public class AddSignatureUseCaseTests
             .Setup(x => x.GetByIdAsync(planId))
             .ReturnsAsync(planItem);
 
-        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com");
+        var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com", identityUserId);
         subscriberMock.AddSignature(planItem.ToPlanSnapshot());
 
         _subscriberRepositoryMock
-            .Setup(r => r.GetByIdAsync(subscriberId))
+            .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
             .ReturnsAsync(subscriberMock);
 
         // Act

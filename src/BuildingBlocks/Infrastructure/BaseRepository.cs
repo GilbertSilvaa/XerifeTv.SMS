@@ -5,7 +5,7 @@ namespace BuildingBlocks.Infrastructure;
 public abstract class BaseRepository<T> : IRepository<T> where T : AggregateRoot
 {
     private readonly DbContext _dbContext;
-    private readonly DbSet<T> _dataSet;
+    protected readonly DbSet<T> _dataSet;
 
     public BaseRepository(DbContext dbContext)
     {

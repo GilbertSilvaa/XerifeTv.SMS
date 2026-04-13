@@ -13,14 +13,15 @@ namespace Subscribers.Domain.Tests;
 public class SubscriberTests
 {
     [Fact]
-    public void Should_CreateSubscriber_When_DataIsValid()
+    public void Should_CreateSubscriber_When_CreatingUserWithDataIsValid()
     {
         // Arrange
         string username = "username_test";
         string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
         // Act
-        var subscriber = Subscriber.Create(username, email);
+        var subscriber = Subscriber.Create(username, email, identityUserId);
 
         // Assert
         subscriber.Should().NotBeNull();
@@ -33,14 +34,15 @@ public class SubscriberTests
     }
 
     [Fact]
-    public void Shoud_ThrowValidationException_When_EmailIsInvalid()
+    public void Shoud_ThrowValidationException_When_CreatingUserWithEmailIsInvalid()
     {
         // Arrange
         string username = "username_test";
         string email = "invalid_email";
+        Guid identityUserId = Guid.NewGuid();
 
         // Act
-        Action act = () => Subscriber.Create(username, email);
+        Action act = () => Subscriber.Create(username, email, identityUserId);
 
         // Assert
         act.Should().Throw<ValidationException>()
@@ -52,25 +54,46 @@ public class SubscriberTests
     [InlineData("   ")]
     [InlineData("invalid username")]
     [InlineData("user@name")]
-    public void Shoud_ThrowValidationException_When_UserNameIsInvalid(string username)
+    public void Shoud_ThrowValidationException_When_CreatingUserWithUserNameIsInvalid(string username)
     {
         // Arrange
         string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
         // Act
-        Action act = () => Subscriber.Create(username, email);
+        Action act = () => Subscriber.Create(username, email, identityUserId);
 
         // Assert
         act.Should().Throw<ValidationException>()
             .WithMessage("The username provided is invalid.");
     }
 
-    [Fact]
-    public void Shoud_AddSignature_When_SignatureIsValid()
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public void Shoud_ThrowValidationException_When_CreatingUserWithIdentityUserIdIsInvalid(string identityUserIdStr)
     {
         // Arrange
         string username = "username_test";
         string email = "email@example.com";
+        Guid identityUserId = Guid.TryParse(identityUserIdStr, out var parsedIdentityUserId) ? parsedIdentityUserId : Guid.Empty;
+        
+        // Act
+        Action act = () => Subscriber.Create(username, email, identityUserId);
+
+        // Assert
+        act.Should().Throw<ValidationException>()
+            .WithMessage("The Identity User ID provided is invalid.");
+    }
+
+    [Fact]
+    public void Shoud_AddSignature_When_AddingSignatureWithDataIsValid()
+    {
+        // Arrange
+        string username = "username_test";
+        string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
         Guid planId = Guid.NewGuid();
         string planName = "Test Plan";
@@ -78,7 +101,7 @@ public class SubscriberTests
         Money planPrice = Money.From(9.99m, "USD");
 
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
-        var subscriber = Subscriber.Create(username, email);
+        var subscriber = Subscriber.Create(username, email, identityUserId);
 
         // Act
         subscriber.AddSignature(plan);
@@ -92,11 +115,12 @@ public class SubscriberTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("00000000-0000-0000-0000-000000000000")]
-    public void Shoud_ThrowValidationException_When_PlanIdIsInvalid(string planIdStr)
+    public void Shoud_ThrowValidationException_When_AddingSignatureWithPlanIdIsInvalid(string planIdStr)
     {
         // Arrange
         string username = "username_test";
         string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
         Guid planId = Guid.TryParse(planIdStr, out var parsedPlanId) ? parsedPlanId : Guid.Empty;
         string planName = "Test Plan";
@@ -104,7 +128,7 @@ public class SubscriberTests
         Money planPrice = Money.From(9.99m, "USD");
 
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
-        var subscriber = Subscriber.Create(username, email);
+        var subscriber = Subscriber.Create(username, email, identityUserId);
 
         // Act
         Action act = () => subscriber.AddSignature(plan);
@@ -120,8 +144,9 @@ public class SubscriberTests
         // Arrange
         string username = "username_test";
         string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
-        var subscriber = Subscriber.Create(username, email);
+        var subscriber = Subscriber.Create(username, email, identityUserId);
 
         Guid planId = Guid.NewGuid();
         string planName = "Test Plan";
@@ -149,6 +174,7 @@ public class SubscriberTests
         // Arrange
         string username = "username_test";
         string email = "email@example.com";
+        Guid identityUserId = Guid.NewGuid();
 
         Guid planId = Guid.NewGuid();
         string planName = "Test Plan";
@@ -157,7 +183,7 @@ public class SubscriberTests
 
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
 
-        var subscriber = Subscriber.Create(username, email);
+        var subscriber = Subscriber.Create(username, email, identityUserId);
         subscriber.AddSignature(plan);
 
         // Act

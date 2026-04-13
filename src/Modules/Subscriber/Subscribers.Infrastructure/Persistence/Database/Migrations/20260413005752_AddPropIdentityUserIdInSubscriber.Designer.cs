@@ -3,18 +3,21 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Subscribers.Infrastructure.Persistence.Database;
 
 #nullable disable
 
-namespace Subscribers.Infrastructure.Migrations
+namespace Subscribers.Infrastructure.Persistence.Database.Migrations
 {
     [DbContext(typeof(SubscriberDbContext))]
-    partial class SubscriberDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260413005752_AddPropIdentityUserIdInSubscriber")]
+    partial class AddPropIdentityUserIdInSubscriber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

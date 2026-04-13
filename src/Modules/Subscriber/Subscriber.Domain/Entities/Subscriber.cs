@@ -11,19 +11,21 @@ public sealed class Subscriber : AggregateRoot
 {
     public string UserName { get; private set; } = default!;
     public string Email { get; private set; } = default!;
+    public Guid IdentityUserId { get; private set; }
 
     private readonly List<Signature> _signatures = [];
     public IReadOnlyList<Signature> Signatures => _signatures;
 
     private Subscriber() { }
 
-    private Subscriber(string userName, string email)
+    private Subscriber(string userName, string email, Guid identityUserId)
     {
         UserName = userName;
         Email = email;
+        IdentityUserId = identityUserId;
     }
 
-    public static Subscriber Create(string userName, string email)
+    public static Subscriber Create(string userName, string email, Guid identityUserId)
     {
         if (!IsValidUserName(userName))
             throw new ValidationException("The username provided is invalid.");
@@ -31,7 +33,10 @@ public sealed class Subscriber : AggregateRoot
         if (!IsValidEmail(email))
             throw new ValidationException("The E-mail provided is invalid.");
 
-        var subscriber = new Subscriber(userName, email);
+        if (identityUserId == Guid.Empty)
+            throw new ValidationException("The Identity User ID provided is invalid.");
+
+        var subscriber = new Subscriber(userName, email, identityUserId);
 
         subscriber.AddDomainEvent(new SubscriberCreatedDomainEvent(subscriber.Id, subscriber.Email, userName));
 
