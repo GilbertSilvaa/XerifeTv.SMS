@@ -12,6 +12,8 @@ public sealed class SubscriberRepository : BaseRepository<Subscriber>, ISubscrib
 
     public async Task<Subscriber?> GetByIdentityUserIdAsync(Guid identityUserId)
     {
-        return await _dataSet.SingleOrDefaultAsync(e => e.IdentityUserId == identityUserId && !e.IsDeleted);
+        return await _dataSet
+            .Include(x => x.Signatures)
+            .SingleOrDefaultAsync(e => e.IdentityUserId == identityUserId && !e.IsDeleted);
     }
 }

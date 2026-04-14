@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Plans.API;
 using Plans.Application;
 using Plans.Infrastructure;
+using Subscribers.API;
 using Subscribers.Application;
 using Subscribers.Infrastructure;
 
@@ -62,9 +63,10 @@ internal class Program
 
 		app.MapPlansEndpoints();
 		app.MapIdentityEndpoints();
+		app.MapSubscribersEndpoints();
 
-		// Configure the HTTP request pipeline.
-		if (app.Environment.IsDevelopment())
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
 		{
 			app.UseSwagger();
 			app.UseSwaggerUI();
