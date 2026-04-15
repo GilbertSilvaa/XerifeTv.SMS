@@ -7,11 +7,11 @@ namespace Plans.Application.Commands.AdjustSimultaneousScreensPlan;
 
 internal sealed class AdjustSimultaneousScreensPlanCommandHandler : ICommandHandler<AdjustSimultaneousScreensPlanCommand, Result>
 {
-	private readonly IPlanRepository _repository;
+	private readonly IPlansRepository _repository;
 	private readonly PlanService _domainService;
 	public readonly IUnitOfWork<Plan> _unitOfWork;
 
-    public AdjustSimultaneousScreensPlanCommandHandler(IPlanRepository repository,  IUnitOfWork<Plan> unitOfWork)
+    public AdjustSimultaneousScreensPlanCommandHandler(IPlansRepository repository,  IUnitOfWork<Plan> unitOfWork)
 	{
 		_repository = repository;
 		_domainService = new PlanService(_repository);

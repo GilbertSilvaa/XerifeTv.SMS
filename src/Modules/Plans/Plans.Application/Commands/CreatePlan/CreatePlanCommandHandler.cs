@@ -7,11 +7,11 @@ namespace Plans.Application.Commands.CreatePlan;
 
 internal sealed class CreatePlanCommandHandler : ICommandHandler<CreatePlanCommand, Result>
 {
-	private readonly IPlanRepository _repository;
+	private readonly IPlansRepository _repository;
 	private readonly PlanService _domainService;
 	private readonly IUnitOfWork<Plan> _unitOfWork;
 
-    public CreatePlanCommandHandler(IPlanRepository repository, IUnitOfWork<Plan> unitOfWork)
+    public CreatePlanCommandHandler(IPlansRepository repository, IUnitOfWork<Plan> unitOfWork)
 	{
 		_repository = repository;
 		_domainService = new PlanService(_repository);

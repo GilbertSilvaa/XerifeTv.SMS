@@ -10,12 +10,12 @@ namespace Subscribers.Application.Commands.AddSignature;
 
 internal sealed class AddSignatureCommandHandler : ICommandHandler<AddSignatureCommand, Result>
 {
-    private readonly ISubscriberRepository _subscriberRepository;
+    private readonly ISubscribersRepository _subscriberRepository;
     private readonly IPlanCatalogRepository _planCatalogRepository;
     private readonly IUnitOfWork<Subscriber> _unitOfWork;
 
     public AddSignatureCommandHandler(
-        ISubscriberRepository subscriberRepository,
+        ISubscribersRepository subscriberRepository,
         IPlanCatalogRepository planCatalogRepository,
         IUnitOfWork<Subscriber> unitOfWork)
     {

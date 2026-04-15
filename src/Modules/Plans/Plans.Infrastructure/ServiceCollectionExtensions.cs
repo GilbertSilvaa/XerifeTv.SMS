@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddModulePlanInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IPlanRepository, PlanRepository>();
+        services.AddScoped<IPlansRepository, PlansRepository>();
         services.AddScoped<IPlansReadRepository, PlansReadRepository>();
         services.Decorate<IPlansReadRepository, CachedPlansReadRepository>();
         services.AddScoped<IUnitOfWork<Plan>, PlanUnitOfWork>();

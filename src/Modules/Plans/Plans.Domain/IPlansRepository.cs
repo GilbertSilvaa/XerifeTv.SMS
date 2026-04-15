@@ -2,7 +2,7 @@
 
 namespace Plans.Domain;
 
-public interface IPlanRepository : IRepository<Plan>
+public interface IPlansRepository : IRepository<Plan>
 {
 	Task<bool> ExistsByNameAsync(string name);
 	Task<bool> ExistsByPriceAsync(Money price);

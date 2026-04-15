@@ -7,11 +7,11 @@ namespace Plans.Application.Commands.AdjustPricePlan;
 
 internal sealed class AdjustPricePlanCommandHandler : ICommandHandler<AdjustPricePlanCommand, Result>
 {
-	private readonly IPlanRepository _repository;
+	private readonly IPlansRepository _repository;
 	private readonly PlanService _domainService;
 	private readonly IUnitOfWork<Plan> _unitOfWork;
 
-	public AdjustPricePlanCommandHandler(IPlanRepository repository, IUnitOfWork<Plan> unitOfWork)
+	public AdjustPricePlanCommandHandler(IPlansRepository repository, IUnitOfWork<Plan> unitOfWork)
 	{
 		_repository = repository;
 		_domainService = new PlanService(_repository);

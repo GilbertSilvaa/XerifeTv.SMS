@@ -6,9 +6,9 @@ using Subscribers.Infrastructure.Persistence.Database;
 
 namespace Subscribers.Infrastructure.Persistence.Repositories;
 
-public sealed class SubscriberRepository : BaseRepository<Subscriber>, ISubscriberRepository
+public sealed class SubscribersRepository : BaseRepository<Subscriber>, ISubscribersRepository
 {
-    public SubscriberRepository(SubscriberDbContext dbContext) : base(dbContext) { }
+    public SubscribersRepository(SubscriberDbContext dbContext) : base(dbContext) { }
 
     public async Task<Subscriber?> GetByIdentityUserIdAsync(Guid identityUserId)
     {

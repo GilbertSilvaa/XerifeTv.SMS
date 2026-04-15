@@ -7,10 +7,10 @@ namespace Plans.Application.Commands.DeletePlan;
 
 internal sealed class DeletePlanCommandHandler : ICommandHandler<DeletePlanCommand, Result>
 {
-	private readonly IPlanRepository _repository;
+	private readonly IPlansRepository _repository;
 	private readonly IUnitOfWork<Plan> _unitOfWork;
 
-    public DeletePlanCommandHandler(IPlanRepository repository, IUnitOfWork<Plan> unitOfWork)
+    public DeletePlanCommandHandler(IPlansRepository repository, IUnitOfWork<Plan> unitOfWork)
 	{
 		_repository = repository;
 		_unitOfWork = unitOfWork;

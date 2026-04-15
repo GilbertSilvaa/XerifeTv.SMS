@@ -5,9 +5,9 @@ namespace Plans.Domain;
 
 public sealed class PlanService
 {
-    private readonly IPlanRepository _repository;
+    private readonly IPlansRepository _repository;
 
-    public PlanService(IPlanRepository repository)
+    public PlanService(IPlansRepository repository)
     {
         _repository = repository;
     }

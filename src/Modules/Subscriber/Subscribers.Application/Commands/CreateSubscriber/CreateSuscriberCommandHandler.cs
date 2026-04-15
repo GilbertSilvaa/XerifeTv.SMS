@@ -9,10 +9,10 @@ namespace Subscribers.Application.Commands.CreateSubscriber;
 
 internal sealed class CreateSuscriberCommandHandler : ICommandHandler<CreateSubscriberCommand, Result>
 {
-    private readonly ISubscriberRepository _repository;
+    private readonly ISubscribersRepository _repository;
     private readonly IUnitOfWork<Subscriber> _unitOfWork;
 
-    public CreateSuscriberCommandHandler(ISubscriberRepository repository, IUnitOfWork<Subscriber> unitOfWork)
+    public CreateSuscriberCommandHandler(ISubscribersRepository repository, IUnitOfWork<Subscriber> unitOfWork)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;

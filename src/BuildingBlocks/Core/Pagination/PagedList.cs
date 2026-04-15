@@ -1,4 +1,4 @@
-﻿namespace BuildingBlocks.Core;
+﻿namespace BuildingBlocks.Core.Pagination;
 
 public sealed class PagedList<T> where T : class
 {

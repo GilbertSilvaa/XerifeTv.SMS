@@ -12,14 +12,14 @@ namespace Subscribers.Application.Tests;
 
 public class AddSignatureUseCaseTests
 {
-    private readonly Mock<ISubscriberRepository> _subscriberRepositoryMock;
+    private readonly Mock<ISubscribersRepository> _subscriberRepositoryMock;
     private readonly Mock<IPlanCatalogRepository> _planCatalogRepositoryMock;
     private readonly Mock<IUnitOfWork<Subscriber>> _unitOfWorkMock;
     private readonly AddSignatureCommandHandler _handler;
 
     public AddSignatureUseCaseTests()
     {
-        _subscriberRepositoryMock = new Mock<ISubscriberRepository>();
+        _subscriberRepositoryMock = new Mock<ISubscribersRepository>();
         _planCatalogRepositoryMock = new Mock<IPlanCatalogRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork<Subscriber>>();
 
