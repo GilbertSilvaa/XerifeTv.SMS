@@ -8,4 +8,5 @@ public interface ISubscribersReadRepository
     Task<SubscriberDto?> GetSubscriberByIdAsync(Guid id);
     Task<SubscriberDto?> GetSubscriberByEmailAsync(string email);
     Task<SubscriberDto?> GetSubscriberByUserNameAsync(string userName);
+    Task<SubscriberDto?> GetSubscriberByIdentityUserIdAsync(Guid identityUserId);
 }

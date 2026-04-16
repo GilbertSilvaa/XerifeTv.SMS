@@ -64,7 +64,7 @@ public sealed class SubscribersReadRepository : ISubscribersReadRepository
         return await _dataSet
             .AsNoTracking()
             .Include(s => s.Signatures)
-            .Where(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+            .Where(s => EF.Functions.ILike(s.Email, email))
             .Select(s => new SubscriberDto(
                 s.UserName,
                 s.Email,
@@ -82,7 +82,25 @@ public sealed class SubscribersReadRepository : ISubscribersReadRepository
         return await _dataSet
             .AsNoTracking()
             .Include(s => s.Signatures)
-            .Where(s => s.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase))
+            .Where(s => EF.Functions.ILike(s.UserName, userName))
+            .Select(s => new SubscriberDto(
+                s.UserName,
+                s.Email,
+                s.Signatures.Select(sig => new SignatureDto(
+                    sig.Plan,
+                    sig.Status,
+                    sig.StartDate,
+                    sig.EndDate,
+                    sig.RenewalDate)).ToList()))
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<SubscriberDto?> GetSubscriberByIdentityUserIdAsync(Guid identityUserId)
+    {
+        return await _dataSet
+            .AsNoTracking()
+            .Include(s => s.Signatures)
+            .Where(s => s.IdentityUserId == identityUserId)
             .Select(s => new SubscriberDto(
                 s.UserName,
                 s.Email,
