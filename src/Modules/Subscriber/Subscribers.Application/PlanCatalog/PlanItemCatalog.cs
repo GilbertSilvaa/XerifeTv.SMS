@@ -21,6 +21,13 @@ public sealed class PlanItemCatalog
         Price = price;
     }
 
+    public void Update(string name, int maxSimultaneousScreens, Money price)
+    {
+        Name = name;
+        MaxSimultaneousScreens = maxSimultaneousScreens;
+        Price = price;
+    }
+
     public void Delete()
     {
         IsDeleted = true;
