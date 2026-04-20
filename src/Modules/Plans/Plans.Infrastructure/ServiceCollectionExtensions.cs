@@ -18,13 +18,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlansReadRepository, PlansReadRepository>();
         services.Decorate<IPlansReadRepository, CachedPlansReadRepository>();
         services.AddScoped<IUnitOfWork<Plan>, PlanUnitOfWork>();
+        services.AddScoped<PlanCacheInvalidationInterceptor>();
 
-        services.AddDbContextFactory<PlanDbContext>((serviceProvider, options) =>
+        services.AddDbContext<PlanDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(PlanDbContext).Assembly.FullName);
             });
+
+            options.AddInterceptors(serviceProvider.GetRequiredService<PlanCacheInvalidationInterceptor>());
         });
 
         return services;

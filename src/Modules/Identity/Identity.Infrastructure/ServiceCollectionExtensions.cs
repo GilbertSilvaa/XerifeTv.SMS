@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddModuleIdentityInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddDbContextFactory<IdentityDbContext>((serviceProvider, options) =>
+		services.AddDbContext<IdentityDbContext>((serviceProvider, options) =>
 		{
 			options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
 			{

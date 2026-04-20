@@ -1,8 +1,9 @@
 ﻿using BuildingBlocks.Behaviors;
+using BuildingBlocks.Core;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Core.Messaging.Outbox;
-using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
+using BuildingBlocks.Infrastructure.Cache;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
@@ -44,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
 		services.AddScoped<IOutboxRepository, OutboxRepository>();
 		services.AddScoped<IInboxRepository, InboxRepository>();
+		services.AddScoped<ICacheService, CacheService>();
 
         services.AddSingleton<IntegrationEventTypeMapper>();
 
@@ -61,7 +63,7 @@ public static class ServiceCollectionExtensions
 			});
 		});
 
-        services.AddDbContextFactory<InboxDbContext>((serviceProvider, options) =>
+        services.AddDbContext<InboxDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
             {

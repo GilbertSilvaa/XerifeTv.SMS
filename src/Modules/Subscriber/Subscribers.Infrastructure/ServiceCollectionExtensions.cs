@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlanCatalogRepository, PlanCatalogRepository>();
         services.AddScoped<IUnitOfWork<Subscriber>, SubscriberUnitOfWork>();
 
-        services.AddDbContextFactory<SubscriberDbContext>((serviceProvider, options) =>
+        services.AddDbContext<SubscriberDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
             {

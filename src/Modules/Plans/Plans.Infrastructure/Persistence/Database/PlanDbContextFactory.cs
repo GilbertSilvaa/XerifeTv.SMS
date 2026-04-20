@@ -12,6 +12,6 @@ public class PlanDbContextFactory : IDesignTimeDbContextFactory<PlanDbContext>
 		var optionsBuilder = new DbContextOptionsBuilder<PlanDbContext>();
 		optionsBuilder.UseNpgsql(connectionString, b => b.MigrationsAssembly(typeof(PlanDbContext).Assembly.FullName));
 
-		return new PlanDbContext(optionsBuilder.Options, eventPublisher: default!, cache: default!);
+		return new PlanDbContext(optionsBuilder.Options, eventPublisher: default!);
 	}
 }
