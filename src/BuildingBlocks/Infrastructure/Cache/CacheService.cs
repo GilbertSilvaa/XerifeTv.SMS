@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.Core;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace BuildingBlocks.Infrastructure.Cache;
@@ -7,6 +8,7 @@ namespace BuildingBlocks.Infrastructure.Cache;
 public sealed class CacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
+    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new();
 
     public CacheService(IDistributedCache cache)
     {
@@ -28,16 +30,43 @@ public sealed class CacheService : ICacheService
         var result = await GetAsync<T>(key);
         if (result != null) return result;
 
-        var response = await factory();
-        if (response == null) return default;
+        var lazySearch = _inFlight.GetOrAdd(
+            key,
+            _ => new Lazy<Task<string?>>(
+                async () =>
+                {
+                    try
+                    {
+                        var response = await factory();
+                        if (response == null) return null;
 
-        var options = new DistributedCacheEntryOptions
+                        var options = new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = expiration ?? TimeSpan.FromHours(1)
+                        };
+
+                        string serializedResponse = JsonSerializer.Serialize(response);
+                        await _cache.SetStringAsync(key, serializedResponse, options);
+
+                        return serializedResponse;
+                    }
+                    finally
+                    {
+                        _inFlight.TryRemove(key, out var removed);
+                    }
+                },
+                LazyThreadSafetyMode.ExecutionAndPublication));
+
+        try
         {
-            AbsoluteExpirationRelativeToNow = expiration ?? TimeSpan.FromHours(1)
-        };
-
-        await _cache.SetStringAsync(key, JsonSerializer.Serialize(response), options);
-        return response;
+            string? lazyResult = await lazySearch.Value;
+            return lazyResult != null ? JsonSerializer.Deserialize<T>(lazyResult) : default;
+        }
+        catch
+        {
+            _inFlight.TryRemove(key, out _);
+            throw;
+        }
     }
 
     public async Task DeleteAsync(string key)

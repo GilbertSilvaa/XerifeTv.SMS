@@ -19,49 +19,49 @@ namespace BuildingBlocks;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddBuildingBlocks(this IServiceCollection services, IConfiguration configuration)
-	{
-		services
-			.AddBuildingBlocksInfrastructure(configuration)
-			.AddBuildingBlocksBehaviors()
-			.AddBuildingBlocksMapping();
+    public static IServiceCollection AddBuildingBlocks(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddBuildingBlocksInfrastructure(configuration)
+            .AddBuildingBlocksBehaviors()
+            .AddBuildingBlocksMapping();
 
-		return services;
-	}
+        return services;
+    }
 
-	private static IServiceCollection AddBuildingBlocksMapping(this IServiceCollection services)
-	{
-		var config = TypeAdapterConfig.GlobalSettings;
-		config.Scan(AppDomain.CurrentDomain.GetAssemblies());
-		services.AddSingleton(config);
+    private static IServiceCollection AddBuildingBlocksMapping(this IServiceCollection services)
+    {
+        var config = TypeAdapterConfig.GlobalSettings;
+        config.Scan(AppDomain.CurrentDomain.GetAssemblies());
+        services.AddSingleton(config);
 
-		return services;
-	}
+        return services;
+    }
 
-	private static IServiceCollection AddBuildingBlocksInfrastructure(this IServiceCollection services, IConfiguration configuration)
-	{
-		services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
+    private static IServiceCollection AddBuildingBlocksInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
-		services.AddScoped<IOutboxRepository, OutboxRepository>();
-		services.AddScoped<IInboxRepository, InboxRepository>();
-		services.AddScoped<ICacheService, CacheService>();
+        services.AddScoped<IOutboxRepository, OutboxRepository>();
+        services.AddScoped<IInboxRepository, InboxRepository>();
+        services.AddSingleton<ICacheService, CacheService>();
 
         services.AddSingleton<IntegrationEventTypeMapper>();
 
-		services.AddStackExchangeRedisCache(options =>
-		{
-			options.Configuration = configuration["Redis:Connection"];
-			options.InstanceName = configuration["Redis:InstanceName"];
-		});
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration["Redis:Connection"];
+            options.InstanceName = configuration["Redis:InstanceName"];
+        });
 
-		services.AddDbContextFactory<OutboxDbContext>((serviceProvider, options) =>
-		{
-			options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
-			{
-				npgsqlOptions.MigrationsAssembly(typeof(OutboxDbContext).Assembly.FullName);
-			});
-		});
+        services.AddDbContextFactory<OutboxDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(OutboxDbContext).Assembly.FullName);
+            });
+        });
 
         services.AddDbContext<InboxDbContext>((serviceProvider, options) =>
         {
@@ -75,11 +75,11 @@ public static class ServiceCollectionExtensions
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
 
         return services;
-	}
+    }
 
-	private static IServiceCollection AddBuildingBlocksBehaviors(this IServiceCollection services)
-	{
-		services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
-		return services;
-	}
+    private static IServiceCollection AddBuildingBlocksBehaviors(this IServiceCollection services)
+    {
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+        return services;
+    }
 }
