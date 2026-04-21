@@ -9,9 +9,12 @@ public class SignatureConfiguration : IEntityTypeConfiguration<Signature>
     public void Configure(EntityTypeBuilder<Signature> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).ValueGeneratedNever();      
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.SubscriberId).IsRequired();
-        builder.HasIndex(x => x.SubscriberId);
+
+        builder.HasIndex(x => x.SubscriberId)
+            .IsUnique()
+            .HasFilter("\"Status\" IN (1, 2)");
 
         builder.ComplexProperty(x => x.Plan, plan =>
         {

@@ -45,8 +45,8 @@ public sealed class Subscriber : AggregateRoot
 
     public override bool Delete()
     {
-        if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
-            throw new ActiveSignatureExistsException("The subscriber cannot be deleted because they have an active subscription.");
+        if (Signatures.Where(s => s.IsActiveOrPending()).Any())
+            throw new ActiveSignatureExistsException("The subscriber cannot be deleted because they have an active/pending subscription.");
 
         bool isDeleted = base.Delete();
 
@@ -61,8 +61,8 @@ public sealed class Subscriber : AggregateRoot
         if (plan.PlanId == Guid.Empty)
             throw new ValidationException("The plan provided is invalid.");
 
-        if (Signatures.Where(s => s.Status != Enums.ESignatureStatus.CANCELLED).Any())
-            throw new ActiveSignatureExistsException(Id);
+        if (Signatures.Where(s => s.IsActiveOrPending()).Any())
+            throw new ActiveSignatureExistsException();
 
         var signature = Signature.Create(plan, subscriberId: Id);
 
@@ -73,7 +73,7 @@ public sealed class Subscriber : AggregateRoot
     public void CancelSignature()
     {
         var signatureActiveOrPending = Signatures
-            .Where(s => s.Status != Enums.ESignatureStatus.CANCELLED)
+            .Where(s => s.IsActiveOrPending())
             .FirstOrDefault();
 
         if (signatureActiveOrPending == null)
