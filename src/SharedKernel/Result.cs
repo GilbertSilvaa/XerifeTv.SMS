@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace SharedKernel;
 
@@ -14,7 +15,8 @@ public sealed record Error(
 
 public class Result
 {
-	protected Result(bool isSuccess, Error error)
+    [JsonConstructor]
+    protected Result(bool isSuccess, Error error)
 	{
 		if (!isSuccess && error == Error.None || isSuccess && error != Error.None)
 			throw new ArgumentException("Invalid error", nameof(error));
@@ -33,7 +35,8 @@ public class Result
 
 public sealed class Result<T>
 {
-	private Result(bool isSuccess, Error error, T? data = default)
+    [JsonConstructor]
+    private Result(bool isSuccess, Error error, T? data = default)
 	{
 		if (!isSuccess && error == Error.None || isSuccess && error != Error.None)
 			throw new ArgumentException("Invalid error", nameof(error));

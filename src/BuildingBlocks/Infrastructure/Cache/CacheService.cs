@@ -71,6 +71,7 @@ public sealed class CacheService : ICacheService
 
     public async Task DeleteAsync(string key)
     {
+        _inFlight.TryRemove(key, out _);
         await _cache.RemoveAsync(key);
     }
 }

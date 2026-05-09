@@ -80,6 +80,7 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddBuildingBlocksBehaviors(this IServiceCollection services)
     {
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(IdempotencyPipelineBehavior<,>));
         return services;
     }
 }
