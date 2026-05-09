@@ -165,7 +165,7 @@ public class SubscriberTests
 
         // Assert
         act.Should().Throw<ActiveSignatureExistsException>()
-            .WithMessage($"The subscriber '{subscriber.Id}' already has an active subscription.");
+            .WithMessage($"The subscriber already has an active subscription.");
     }
 
     [Fact]
