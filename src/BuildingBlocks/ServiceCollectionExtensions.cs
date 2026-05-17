@@ -13,6 +13,7 @@ using BuildingBlocks.Infrastructure.Messaging.Publishers;
 using BuildingBlocks.IntegrationEvents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using System.Reflection;
 
 namespace BuildingBlocks;
@@ -45,7 +46,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
         services.AddScoped<IOutboxRepository, OutboxRepository>();
         services.AddScoped<IInboxRepository, InboxRepository>();
-        services.AddSingleton<ICacheService, CacheService>();
+
+        //services.AddSingleton<ICacheService, CacheService>();
+        services.AddSingleton<ICacheService, DistributedLockCacheService>();
 
         services.AddSingleton<IntegrationEventTypeMapper>();
 
@@ -53,6 +56,11 @@ public static class ServiceCollectionExtensions
         {
             options.Configuration = configuration["Redis:Connection"];
             options.InstanceName = configuration["Redis:InstanceName"];
+        });
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            return ConnectionMultiplexer.Connect(configuration["Redis:Connection"]!);
         });
 
         services.AddDbContextFactory<OutboxDbContext>((serviceProvider, options) =>
