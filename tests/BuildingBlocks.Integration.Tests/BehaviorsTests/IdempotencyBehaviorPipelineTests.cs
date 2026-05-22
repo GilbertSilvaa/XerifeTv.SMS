@@ -2,18 +2,21 @@
 using BuildingBlocks.Core;
 using BuildingBlocks.Infrastructure.Cache;
 using BuildingBlocks.Integration.Tests.Fakes;
+using BuildingBlocks.Integration.Tests.Infrastructure;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
+using StackExchange.Redis;
 
 namespace BuildingBlocks.Integration.Tests.BehaviorsTests;
 
+[Collection("Redis")]
 public class IdempotencyBehaviorPipelineTests
 {
     private readonly IMediator _mediator;
 
-    public IdempotencyBehaviorPipelineTests()
+    public IdempotencyBehaviorPipelineTests(RedisFixture fixture)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -27,8 +30,15 @@ public class IdempotencyBehaviorPipelineTests
             IPipelineBehavior<FakeIdempotentCommand, Result>,
             IdempotencyPipelineBehavior<FakeIdempotentCommand, Result>>();
 
-        services.AddDistributedMemoryCache();
-        services.AddSingleton<ICacheService, CacheService>();
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = fixture.ConnectionString;
+            options.InstanceName = "TestInstance";
+        });
+
+        services.AddTransient<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(fixture.ConnectionString));
+
+        services.AddSingleton<ICacheService, DistributedLockCacheService>();
 
         var provider = services.BuildServiceProvider();
 
