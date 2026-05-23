@@ -9,12 +9,16 @@ public sealed class DistributedLockCacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
     private readonly IConnectionMultiplexer _redis;
-    private readonly TimeSpan _lockTimeout = TimeSpan.FromSeconds(60);
+    private readonly TimeSpan _lockTimeout;
 
-    public DistributedLockCacheService(IDistributedCache cache, IConnectionMultiplexer redis)
+    public DistributedLockCacheService(
+        IDistributedCache cache,
+        IConnectionMultiplexer redis,
+        TimeSpan? lockTimeout = null)
     {
         _cache = cache;
         _redis = redis;
+        _lockTimeout = lockTimeout ?? TimeSpan.FromSeconds(60);
     }
 
     public async Task<T?> GetAsync<T>(string key)
@@ -37,7 +41,7 @@ public sealed class DistributedLockCacheService : ICacheService
         string lockKey = $"{key}:lock";
         string channelName = $"{key}:channel";
 
-        if (await db.StringSetAsync(lockKey, "locked", when: When.NotExists))
+        if (await db.StringSetAsync(lockKey, "locked", when: When.NotExists, expiry: _lockTimeout))
         {
             try
             {
@@ -88,6 +92,9 @@ public sealed class DistributedLockCacheService : ICacheService
 
                 throw new InvalidOperationException("An error occurred while retrieving the cache.");
             }
+
+            var lasTryResult = await GetAsync<T>(key);
+            if (lasTryResult != null) return lasTryResult;
 
             throw new TimeoutException("Timeout while waiting for cache to be populated.");
         }
