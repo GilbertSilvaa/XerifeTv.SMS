@@ -1,6 +1,6 @@
 ﻿using Testcontainers.Redis;
 
-namespace BuildingBlocks.Integration.Tests.Infrastructure;
+namespace BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 
 public sealed class RedisFixture : IAsyncLifetime
 {

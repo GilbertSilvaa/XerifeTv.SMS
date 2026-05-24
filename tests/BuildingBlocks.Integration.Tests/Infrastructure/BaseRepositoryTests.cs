@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Integration.Tests.Fakes;
+using BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 

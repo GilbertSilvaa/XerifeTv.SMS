@@ -4,7 +4,7 @@ using Respawn;
 using System.Data.Common;
 using Testcontainers.PostgreSql;
 
-namespace BuildingBlocks.Integration.Tests.Infrastructure;
+namespace BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 
 public sealed class PostgreSqlFixture : IAsyncLifetime
 {

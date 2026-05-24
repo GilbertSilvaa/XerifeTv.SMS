@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.Core;
 using BuildingBlocks.Infrastructure.Cache;
+using BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;

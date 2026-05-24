@@ -2,7 +2,7 @@
 using BuildingBlocks.Core;
 using BuildingBlocks.Infrastructure.Cache;
 using BuildingBlocks.Integration.Tests.Fakes;
-using BuildingBlocks.Integration.Tests.Infrastructure;
+using BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
