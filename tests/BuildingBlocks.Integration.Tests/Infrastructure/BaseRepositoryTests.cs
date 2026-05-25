@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BuildingBlocks.Integration.Tests.Infrastructure;
 
-[Collection("Postgres")]
+[Collection("PostgresFakeDbContext")]
 public class BaseRepositoryTests : IAsyncLifetime
 {
-    private readonly PostgreSqlFixture _fixture;
+    private readonly FakeDbFixure _fixture;
     private readonly FakeDbContext _dbContext;
     private readonly FakeRepository _repository;
 
-    public BaseRepositoryTests(PostgreSqlFixture fixture)
+    public BaseRepositoryTests(FakeDbFixure fixture)
     {
         _fixture = fixture;
 

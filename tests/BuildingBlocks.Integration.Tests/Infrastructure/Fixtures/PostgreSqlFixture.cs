@@ -6,8 +6,9 @@ using Testcontainers.PostgreSql;
 
 namespace BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 
-public sealed class PostgreSqlFixture : IAsyncLifetime
+public abstract class PostgreSqlFixture<TDbContext> : IAsyncLifetime where TDbContext : DbContext
 {
+    private readonly Func<DbContextOptions<TDbContext>, TDbContext> _factory;
     private readonly PostgreSqlContainer _container;
 
     private Respawner _respawner = default!;
@@ -15,8 +16,10 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
-    public PostgreSqlFixture()
+    public PostgreSqlFixture(Func<DbContextOptions<TDbContext>, TDbContext> factory)
     {
+        _factory = factory;
+
         _container = new PostgreSqlBuilder("postgres:17")
             .WithDatabase("tests")
             .WithUsername("postgres")
@@ -31,11 +34,11 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
         _connection = new Npgsql.NpgsqlConnection(ConnectionString);
         await _connection.OpenAsync();
 
-        var options = new DbContextOptionsBuilder<FakeDbContext>()
+        var options = new DbContextOptionsBuilder<TDbContext>()
                         .UseNpgsql(ConnectionString)
                         .Options;
 
-        await using var db = new FakeDbContext(options);
+        await using var db = _factory(options);
         await db.Database.EnsureCreatedAsync();
 
         _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
@@ -57,5 +60,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition("Postgres")]
-public sealed class PostgresCollection : ICollectionFixture<PostgreSqlFixture>;
+public class FakeDbFixure() : PostgreSqlFixture<FakeDbContext>(options => new FakeDbContext(options));
+
+[CollectionDefinition("PostgresFakeDbContext")]
+public class PostgresCollectionFakeDbContext : ICollectionFixture<FakeDbFixure>;
