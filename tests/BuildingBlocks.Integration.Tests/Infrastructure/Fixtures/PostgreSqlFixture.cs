@@ -1,4 +1,5 @@
-﻿using BuildingBlocks.Integration.Tests.Fakes;
+﻿using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
+using BuildingBlocks.Integration.Tests.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Respawn;
 using System.Data.Common;
@@ -64,3 +65,8 @@ public class FakeDbFixure() : PostgreSqlFixture<FakeDbContext>(options => new Fa
 
 [CollectionDefinition("PostgresFakeDbContext")]
 public class PostgresCollectionFakeDbContext : ICollectionFixture<FakeDbFixure>;
+
+public class OutboxDbFixture() : PostgreSqlFixture<OutboxDbContext>(options => new OutboxDbContext(options, default!));
+
+[CollectionDefinition("PostgresOutboxDbContext")]
+public class PostgresCollectionOutboxDbContext : ICollectionFixture<OutboxDbFixture>;
