@@ -1,4 +1,5 @@
-﻿using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
+﻿using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
+using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
 using BuildingBlocks.Integration.Tests.Fakes;
 using Microsoft.EntityFrameworkCore;
 using Respawn;
@@ -70,3 +71,8 @@ public class OutboxDbFixture() : PostgreSqlFixture<OutboxDbContext>(options => n
 
 [CollectionDefinition("PostgresOutboxDbContext")]
 public class PostgresCollectionOutboxDbContext : ICollectionFixture<OutboxDbFixture>;
+
+public class InboxDbFixture() : PostgreSqlFixture<InboxDbContext>(options => new InboxDbContext(options, default!));
+
+[CollectionDefinition("PostgresInboxDbContext")]
+public class PostgresCollectionInboxDbContext : ICollectionFixture<InboxDbFixture>;

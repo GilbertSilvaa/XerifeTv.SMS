@@ -24,7 +24,6 @@ public class OutboxRepositoryTests : IAsyncLifetime
             .Options;
 
         _dbContext = new OutboxDbContext(options, default!);
-
         _repository = new OutboxRepository(_dbContext);
     }
 
