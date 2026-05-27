@@ -31,8 +31,7 @@ public sealed class IntegrationEventEnvelopeHandler : INotificationHandler<Integ
             Type integrationEventType = _integrationEventTypeMapper.GetEventTypeByName(eventEnvelope.EventName)
                 ?? throw new InvalidOperationException($"Integration event type '{eventEnvelope.EventName}' is not recognized.");
 
-            var @event = (IntegrationEvent?)JsonSerializer.Deserialize(eventEnvelope.Payload, integrationEventType)
-                ?? throw new InvalidOperationException($"Deserialization of integration event '{eventEnvelope.EventName}' failed.");
+            var @event = (IntegrationEvent)JsonSerializer.Deserialize(eventEnvelope.Payload, integrationEventType)!;
 
             await _mediator.Publish(@event, cancellationToken);
         }
@@ -40,7 +39,11 @@ public sealed class IntegrationEventEnvelopeHandler : INotificationHandler<Integ
         {
             return;
         }
-        catch (Exception ex)
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"Deserialization of integration event '{eventEnvelope.EventName}' failed.", ex);
+        }
+        catch (Exception ex) when ((ex is not InvalidOperationException))
         {
             throw new InvalidOperationException($"Failed to dispatch integration event '{eventEnvelope.EventName}'.", ex);
         }

@@ -42,6 +42,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
+
+		<InternalsVisibleTo Include="BuildingBlocks.Integration.Tests" />
 	</ItemGroup>
 
 </Project>

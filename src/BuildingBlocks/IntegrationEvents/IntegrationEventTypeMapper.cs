@@ -27,6 +27,11 @@ public sealed class IntegrationEventTypeMapper
         }
     }
 
+    public IntegrationEventTypeMapper(Dictionary<string, Type> eventTypeMappings)
+    {
+        _eventTypeMappings = eventTypeMappings;
+    }
+
     public Type? GetEventTypeByName(string eventName)
         => _eventTypeMappings.TryGetValue(eventName, out var eventType) ? eventType : null;
 }
