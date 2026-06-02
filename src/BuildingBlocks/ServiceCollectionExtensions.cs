@@ -43,9 +43,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
+        services.AddScoped<IOutboxMessageDispatcher, OutboxMessageDispatcher>();
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
         services.AddScoped<IOutboxRepository, OutboxRepository>();
         services.AddScoped<IInboxRepository, InboxRepository>();
+
 
         //services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<ICacheService, DistributedLockCacheService>();
