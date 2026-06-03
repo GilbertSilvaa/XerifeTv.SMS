@@ -1,7 +1,6 @@
 ﻿using BuildingBlocks.Common;
 using BuildingBlocks.Core.Events;
 using BuildingBlocks.Infrastructure.Messaging.Consumers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json;
@@ -11,7 +10,7 @@ using Wolverine.RabbitMQ;
 using ICoreMessageBus = BuildingBlocks.Core.Messaging.IMessageBus;
 using IWolverineBus = Wolverine.IMessageBus;
 
-namespace BuildingBlocks.Infrastructure.Messaging.Buses;
+namespace BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 
 public sealed class WolverineRabbitMQMessageBus : ICoreMessageBus
 {
@@ -45,23 +44,24 @@ public static class WolverineRabbitMQMessageBusExtensions
 {
     public static void AddWolverineRabbitMQPublisherConfiguration(
         this IHostApplicationBuilder builder,
-        IConfiguration configuration)
+        RabbitMQConnectionOptions configuration)
     {
         builder.UseWolverine(opts =>
         {
             opts.UseRabbitMq(rabbit =>
             {
-                rabbit.HostName = configuration["RabbitMQ:Host"]!;
-                rabbit.Port = int.Parse(configuration["RabbitMQ:Port"]!);
-                rabbit.UserName = configuration["RabbitMQ:Username"]!;
-                rabbit.Password = configuration["RabbitMQ:Password"]!;
-                rabbit.VirtualHost = configuration["RabbitMQ:VHost"]!;
+                rabbit.HostName = configuration.Host;
+                rabbit.Port = configuration.Port;
+                rabbit.UserName = configuration.UserName;
+                rabbit.Password = configuration.Password;
+                rabbit.VirtualHost = configuration.VirtualHost;
             })
             .DeclareExchange(MessagingConstants.INTEGRATION_EVENTS_TOPIC, ex =>
             {
                 ex.ExchangeType = ExchangeType.Topic;
                 ex.BindQueue(MessagingConstants.INTEGRATION_EVENTS_TOPIC, "#");
             })
+            .CustomizeDeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"))
             .AutoProvision();
 
             opts.PublishAllMessages()
@@ -71,7 +71,7 @@ public static class WolverineRabbitMQMessageBusExtensions
 
     public static void AddWolverineRabbitMQConsumerConfiguration(
         this IHostApplicationBuilder builder,
-        IConfiguration configuration,
+        RabbitMQConnectionOptions configuration,
         int maxAttempsRetry = 4)
     {
         builder.UseWolverine(opts =>
@@ -80,24 +80,24 @@ public static class WolverineRabbitMQMessageBusExtensions
 
             opts.UseRabbitMq(rabbit =>
             {
-                rabbit.HostName = configuration["RabbitMQ:Host"]!;
-                rabbit.Port = int.Parse(configuration["RabbitMQ:Port"]!);
-                rabbit.UserName = configuration["RabbitMQ:Username"]!;
-                rabbit.Password = configuration["RabbitMQ:Password"]!;
-                rabbit.VirtualHost = configuration["RabbitMQ:VHost"]!;
+                rabbit.HostName = configuration.Host;
+                rabbit.Port = configuration.Port;
+                rabbit.UserName = configuration.UserName;
+                rabbit.Password = configuration.Password;
+                rabbit.VirtualHost = configuration.VirtualHost;
             })
             .DeclareExchange(MessagingConstants.INTEGRATION_EVENTS_TOPIC, ex =>
             {
                 ex.ExchangeType = ExchangeType.Topic;
                 ex.BindQueue(MessagingConstants.INTEGRATION_EVENTS_TOPIC, "#");
             })
+            .CustomizeDeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"))
             .AutoProvision();
 
             opts.ListenToRabbitQueue(MessagingConstants.INTEGRATION_EVENTS_TOPIC)
                 .UseDurableInbox()
                 .PreFetchCount((ushort)MessagingConstants.MAX_MESSAGES_PER_BATCH)
-                .ListenerCount(3)
-                .DeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"));
+                .ListenerCount(3);
 
             List<TimeSpan> retryDelay = [];
 

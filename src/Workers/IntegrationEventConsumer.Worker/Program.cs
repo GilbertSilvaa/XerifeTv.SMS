@@ -1,5 +1,4 @@
 using BuildingBlocks;
-using BuildingBlocks.Infrastructure.Messaging.Buses;
 using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using Identity.Application;
 using Identity.Infrastructure;
@@ -8,7 +7,6 @@ using Notifications.Application;
 using Notifications.Infrastructure;
 using Subscribers.Application;
 using Subscribers.Infrastructure;
-using ICoreMessageBus = BuildingBlocks.Core.Messaging.IMessageBus;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -21,18 +19,12 @@ builder.Services
         .AddModuleNotificationInfrastructure(builder.Configuration)
         .AddModuleNotificationApplication();
 
-string messageBusProvider = builder.Configuration["MessageBusProvider"] ?? string.Empty;
+var options = new RabbitMQConnectionOptions();
+builder.Configuration
+       .GetSection(RabbitMQConnectionOptions.SectionName)
+       .Bind(options);
 
-if (messageBusProvider.Equals("Wolverine", StringComparison.OrdinalIgnoreCase))
-{
-    builder.AddWolverineRabbitMQConsumerConfiguration(builder.Configuration);
-    builder.Services.AddSingleton<ICoreMessageBus, WolverineRabbitMQMessageBus>();
-}
-else
-{
-    builder.Services.AddSingleton(provider => new RabbitMqConnectionProvider(builder.Configuration));
-    builder.Services.AddSingleton<ICoreMessageBus, RabbitMQMessageBus>();
-}
+builder.AddWolverineRabbitMQConsumerConfiguration(options);
 
 builder.Services.AddHostedService<Worker>();
 

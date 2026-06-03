@@ -4,6 +4,7 @@ using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Cache;
+using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
@@ -41,13 +42,14 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddBuildingBlocksInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSingleton<IMessageBus, WolverineRabbitMQMessageBus>();
+
         services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
         services.AddScoped<IOutboxMessageDispatcher, OutboxMessageDispatcher>();
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
         services.AddScoped<IOutboxRepository, OutboxRepository>();
         services.AddScoped<IInboxRepository, InboxRepository>();
-
 
         //services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<ICacheService, DistributedLockCacheService>();
