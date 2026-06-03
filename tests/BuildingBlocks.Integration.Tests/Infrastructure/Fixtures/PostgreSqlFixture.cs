@@ -23,10 +23,10 @@ public abstract class PostgreSqlFixture<TDbContext> : IAsyncLifetime where TDbCo
         _factory = factory;
 
         _container = new PostgreSqlBuilder("postgres:17")
-            .WithDatabase("tests")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
+                            .WithDatabase("tests")
+                            .WithUsername("postgres")
+                            .WithPassword("postgres")
+                            .Build();
     }
 
     public async Task InitializeAsync()
@@ -37,8 +37,8 @@ public abstract class PostgreSqlFixture<TDbContext> : IAsyncLifetime where TDbCo
         await _connection.OpenAsync();
 
         var options = new DbContextOptionsBuilder<TDbContext>()
-                        .UseNpgsql(ConnectionString)
-                        .Options;
+                            .UseNpgsql(ConnectionString)
+                            .Options;
 
         await using var db = _factory(options);
         await db.Database.EnsureCreatedAsync();

@@ -71,7 +71,8 @@ public static class WolverineRabbitMQMessageBusExtensions
 
     public static void AddWolverineRabbitMQConsumerConfiguration(
         this IHostApplicationBuilder builder,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        int maxAttempsRetry = 4)
     {
         builder.UseWolverine(opts =>
         {
@@ -95,13 +96,16 @@ public static class WolverineRabbitMQMessageBusExtensions
             opts.ListenToRabbitQueue(MessagingConstants.INTEGRATION_EVENTS_TOPIC)
                 .UseDurableInbox()
                 .PreFetchCount((ushort)MessagingConstants.MAX_MESSAGES_PER_BATCH)
-                .ListenerCount(3);
+                .ListenerCount(3)
+                .DeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"));
+
+            List<TimeSpan> retryDelay = [];
+
+            foreach (int attempt in Enumerable.Range(1, maxAttempsRetry))
+                retryDelay.Add(TimeSpan.FromSeconds(Math.Pow(5, attempt)));
 
             opts.Policies.OnException<Exception>()
-                .RetryWithCooldown(
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(5),
-                    TimeSpan.FromSeconds(15));
+                .RetryWithCooldown([.. retryDelay]);
         });
     }
 }

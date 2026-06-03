@@ -17,8 +17,8 @@ public class BaseRepositoryTests : IAsyncLifetime
         _fixture = fixture;
 
         var options = new DbContextOptionsBuilder<FakeDbContext>()
-            .UseNpgsql(_fixture.ConnectionString)
-            .Options;
+                            .UseNpgsql(_fixture.ConnectionString)
+                            .Options;
 
         _dbContext = new FakeDbContext(options);
         _repository = new FakeRepository(_dbContext);
