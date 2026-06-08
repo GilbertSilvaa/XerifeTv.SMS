@@ -34,7 +34,7 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 
 		if (!result.Succeeded)
 		{
-			string errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+			string errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
 			return Result.Failure(new Error("RegisterUser.Error", errorMessage));
 		}
 
