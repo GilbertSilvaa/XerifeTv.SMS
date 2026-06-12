@@ -9,4 +9,5 @@ public interface ISubscribersReadRepository
     Task<SubscriberDto?> GetSubscriberByEmailAsync(string email);
     Task<SubscriberDto?> GetSubscriberByUserNameAsync(string userName);
     Task<SubscriberDto?> GetSubscriberByIdentityUserIdAsync(Guid identityUserId);
+    Task<PagedList<SubscriberDto>> GetSubscribersByPlanIdAsync(Guid planId, PagedQuery pagedQuery);
 }

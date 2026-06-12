@@ -4,7 +4,7 @@ using Notifications.Application.Abstractions;
 
 namespace Notifications.Application.Handlers;
 
-internal class SendEmailOnSubscriberCreatedHandler : IIntegrationEventHandler<SubscriberCreatedIntegrationEvent>
+internal sealed class SendEmailOnSubscriberCreatedHandler : IIntegrationEventHandler<SubscriberCreatedIntegrationEvent>
 {
     private readonly IEmailSender _emailSender;
 

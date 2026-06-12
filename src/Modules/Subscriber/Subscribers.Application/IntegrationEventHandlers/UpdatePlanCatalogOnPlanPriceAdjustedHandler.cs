@@ -4,11 +4,11 @@ using Subscribers.Application.PlanCatalog;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class PlanPriceAdjustedIntegrationEventHandler : IIntegrationEventHandler<PlanPriceAdjustedIntegrationEvent>
+internal sealed class UpdatePlanCatalogOnPlanPriceAdjustedHandler : IIntegrationEventHandler<PlanPriceAdjustedIntegrationEvent>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
 
-    public PlanPriceAdjustedIntegrationEventHandler(IPlanCatalogRepository planCatalogRepository)
+    public UpdatePlanCatalogOnPlanPriceAdjustedHandler(IPlanCatalogRepository planCatalogRepository)
     {
         _planCatalogRepository = planCatalogRepository;
     }

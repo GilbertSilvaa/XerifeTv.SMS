@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Subscribers.Application.Queries.ReadModels;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Enums;
 using Subscribers.Infrastructure.Persistence.Database;
 
 namespace Subscribers.Infrastructure.Persistence.Repositories;
@@ -111,5 +112,26 @@ public sealed class SubscribersReadRepository : ISubscribersReadRepository
                     sig.EndDate,
                     sig.RenewalDate)).ToList()))
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<PagedList<SubscriberDto>> GetSubscribersByPlanIdAsync(Guid planId, PagedQuery pagedQuery)
+    {
+        var totalCount = await _dataSet.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pagedQuery.PageSize);
+
+        var subscribers = await _dataSet
+            .AsNoTracking()
+            .Where(s => s.Signatures.Any(
+                                        sig => sig.Plan.PlanId == planId 
+                                        && (sig.Status == ESignatureStatus.ACTIVE || sig.Status == ESignatureStatus.PENDING_PAYMENT)))
+            .Skip((pagedQuery.Page - 1) * pagedQuery.PageSize)
+            .Take(pagedQuery.PageSize)
+            .Select(s => new SubscriberDto(
+                s.UserName,
+                s.Email,
+                new List<SignatureDto>()))
+            .ToListAsync();
+
+        return new PagedList<SubscriberDto>(pagedQuery.Page, totalPages, subscribers);
     }
 }
