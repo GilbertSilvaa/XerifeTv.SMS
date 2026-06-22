@@ -26,8 +26,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
     private IHost _consumerHost = default!;
 
     private readonly Mock<IMediator> _mediatorMock = new();
-    private readonly Mock<IInboxRepository> _inboxRepositoryMock = new();
-    
+
     public BusRabbitMqTests(RabbitMqFixture fixture)
     {
         _fixture = fixture;
@@ -46,7 +45,6 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
 
         consumerBuilder.Services
             .AddSingleton(_mediatorMock.Object)
-            .AddSingleton(_inboxRepositoryMock.Object)
             .AddSingleton(new IntegrationEventTypeMapper(new()
             {
                 ["fake.test"] = typeof(FakeIntegrationEvent)
@@ -152,35 +150,12 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_NotDispatch_When_MessageIsAlreadyProcessed()
-    {
-        // Arrange
-        _inboxRepositoryMock
-            .Setup(x => x.AddAsync(It.IsAny<InboxMessage>()))
-            .ThrowsAsync(new UniqueConstraintViolationException());
-
-        var integrationEvent = new FakeIntegrationEvent("Duplicate Event", Guid.NewGuid());
-        var envelope = IntegrationEventEnvelope.MapFromIntegrationEvent(integrationEvent);
-        var message = JsonSerializer.Serialize(envelope);
-
-        // Act
-        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType);
-
-        await Task.Delay(TimeSpan.FromSeconds(3));
-
-        // Assert
-        _mediatorMock.Verify(
-            x => x.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
     public async Task Should_SendToDeadLetter_When_HandlerThrowsAfterRetries()
     {
         // Arrange
-        _inboxRepositoryMock
-            .Setup(x => x.AddAsync(It.IsAny<InboxMessage>()))
-            .ThrowsAsync(new Exception("Falha permanente"));
+        _mediatorMock
+            .Setup(x => x.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Permanent failure"));
 
         var integrationEvent = new FakeIntegrationEvent("Dead Letter Event", Guid.NewGuid());
         var envelope = IntegrationEventEnvelope.MapFromIntegrationEvent(integrationEvent);
@@ -191,8 +166,8 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
         await Task.Delay(TimeSpan.FromSeconds(15));
 
         // Assert
-        _inboxRepositoryMock.Verify(
-            x => x.AddAsync(It.IsAny<InboxMessage>()),
+        _mediatorMock.Verify(
+            x => x.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 }

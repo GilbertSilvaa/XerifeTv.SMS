@@ -1,7 +1,5 @@
 ﻿using BuildingBlocks.Core.Messaging.Inbox;
-using BuildingBlocks.Infrastructure.Exceptions;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
-using Npgsql;
 
 namespace BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
 
@@ -18,19 +16,6 @@ public class InboxRepository : IInboxRepository
 
     public async Task AddAsync(InboxMessage entity)
     {
-        try
-        {
-            _dataSet.Add(entity);
-            await _dbContext.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            if (ex.InnerException is PostgresException pgEx && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-                throw new UniqueConstraintViolationException(pgEx.ConstraintName, ex);
-            }
-
-            throw;
-        }
+        await _dataSet.AddAsync(entity);
     }
 }

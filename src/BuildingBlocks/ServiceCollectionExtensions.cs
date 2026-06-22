@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
         services.AddScoped<IOutboxMessageDispatcher, OutboxMessageDispatcher>();
         services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
+        services.AddScoped<IInboxUnitOfWork, InboxUnitOfWork>();
         services.AddScoped<IOutboxRepository, OutboxRepository>();
         services.AddScoped<IInboxRepository, InboxRepository>();
 
@@ -83,7 +84,12 @@ public static class ServiceCollectionExtensions
             });
         });
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            cfg.NotificationPublisherType = typeof(IdempotencyIntegrationEventHandlerBehavior);
+        });
+
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
 
         return services;

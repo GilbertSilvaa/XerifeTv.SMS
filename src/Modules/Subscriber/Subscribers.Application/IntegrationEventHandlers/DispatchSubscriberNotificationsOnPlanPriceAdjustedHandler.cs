@@ -21,8 +21,6 @@ internal sealed class DispatchSubscriberNotificationsOnPlanPriceAdjustedHandler 
 
     public async Task Handle(PlanPriceAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        // todo: idepotency
-
         PlanItemCatalog? plan = await _planCatalogRepository.GetByIdAsync(notification.Id);
 
         if (plan == null) return;

@@ -1,6 +1,4 @@
 ﻿using BuildingBlocks.Core.Events;
-using BuildingBlocks.Core.Messaging.Inbox;
-using BuildingBlocks.Infrastructure.Exceptions;
 using BuildingBlocks.Infrastructure.Messaging.Consumers;
 using BuildingBlocks.Integration.Tests.Fakes;
 using BuildingBlocks.IntegrationEvents;
@@ -15,13 +13,11 @@ public class IntegrationEventEnvelopeHandlerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
     private readonly IntegrationEventTypeMapper _eventTypeMapper;
-    private readonly Mock<IInboxRepository> _inboxRepositoryMock;
     private readonly IntegrationEventEnvelopeHandler _handler;
 
     public IntegrationEventEnvelopeHandlerTests()
     {
         _mediatorMock = new Mock<IMediator>();
-        _inboxRepositoryMock = new Mock<IInboxRepository>();
 
         _eventTypeMapper = new IntegrationEventTypeMapper(new()
         {
@@ -30,9 +26,7 @@ public class IntegrationEventEnvelopeHandlerTests
 
         _handler = new IntegrationEventEnvelopeHandler(
             _mediatorMock.Object,
-            _eventTypeMapper,
-            _inboxRepositoryMock.Object
-        );
+            _eventTypeMapper);
     }
 
     [Fact]
@@ -46,8 +40,6 @@ public class IntegrationEventEnvelopeHandlerTests
         await _handler.Handle(envelope, CancellationToken.None);
 
         // Assert
-        _inboxRepositoryMock.Verify(x => x.AddAsync(It.IsAny<InboxMessage>()), Times.Once);
-
         _mediatorMock.Verify(
             x => x.Publish(
                 It.Is<IntegrationEvent>(e =>
@@ -55,26 +47,6 @@ public class IntegrationEventEnvelopeHandlerTests
                     e.EventName == integrationEvent.EventName),
                 It.IsAny<CancellationToken>()),
             Times.Once);
-    }
-
-    [Fact]
-    public async Task Should_Ignore_When_UniqueConstraintViolationOccurs()
-    {
-        // Arrange
-        var integrationEvent = new FakeIntegrationEvent("Test Event", Guid.NewGuid());
-        var envelope = IntegrationEventEnvelope.MapFromIntegrationEvent(integrationEvent);
-
-        _inboxRepositoryMock
-            .Setup(x => x.AddAsync(It.IsAny<InboxMessage>()))
-            .ThrowsAsync(new UniqueConstraintViolationException());
-
-        // Act
-        await _handler.Handle(envelope, CancellationToken.None);
-
-        // Assert
-        _mediatorMock.Verify(
-            x => x.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]
@@ -140,9 +112,10 @@ public class IntegrationEventEnvelopeHandlerTests
         var envelope = IntegrationEventEnvelope.MapFromIntegrationEvent(integrationEvent);
         var exception = new Exception("Inbox failed");
 
-        _inboxRepositoryMock
-            .Setup(x => x.AddAsync(It.IsAny<InboxMessage>()))
-            .ThrowsAsync(exception);
+        _mediatorMock.Setup(x => x.Publish(
+                                    It.IsAny<INotification>(),
+                                    It.IsAny<CancellationToken>()))
+                                .ThrowsAsync(exception);
 
         // Act
         Func<Task> action = () => _handler.Handle(envelope, CancellationToken.None);
