@@ -2,6 +2,7 @@
 using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Infrastructure.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.InteropServices;
 
 namespace BuildingBlocks.Behaviors;
 
@@ -29,22 +30,37 @@ public sealed class IdempotencyIntegrationEventHandlerBehavior : INotificationPu
 
         foreach (var handlerExecutor in handlerExecutors)
         {
+            using var scope = _serviceProvider.CreateScope();
+            var inboxRepository = scope.ServiceProvider.GetRequiredService<IInboxRepository>();
+            var inboxUnitOfWork = scope.ServiceProvider.GetRequiredService<IInboxUnitOfWork>();
+
+            string handlerKey = handlerExecutor.HandlerInstance.GetType().FullName!;
+            var inboxMessage = InboxMessage.Create(integrationEvent.EventId, handlerKey, integrationEvent.EventType);
+
             try
             {
-                string handlerKey = handlerExecutor.HandlerInstance.GetType().FullName!;
-
-                using var scope = _serviceProvider.CreateScope();
-                var inboxRepository = scope.ServiceProvider.GetRequiredService<IInboxRepository>();
-                var inboxUnitOfWork = scope.ServiceProvider.GetRequiredService<IInboxUnitOfWork>();
-
-                await inboxRepository.AddAsync(InboxMessage.Create(integrationEvent.EventId, handlerKey, integrationEvent.EventType));
+                await inboxRepository.AddOrUpdateAsync(inboxMessage);
                 await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
 
                 await handlerExecutor.HandlerCallback(notification, cancellationToken);
+
+                inboxMessage.MarkAsProcessed();
+                await inboxRepository.AddOrUpdateAsync(inboxMessage);
             }
             catch (UniqueConstraintViolationException)
             {
                 continue;
+            }
+            catch (Exception ex)
+            {
+                inboxMessage.MarkAsFailed(ex.Message);
+                await inboxRepository.AddOrUpdateAsync(inboxMessage);
+
+                throw;
+            }
+            finally
+            {
+                await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
             }
         }
     }

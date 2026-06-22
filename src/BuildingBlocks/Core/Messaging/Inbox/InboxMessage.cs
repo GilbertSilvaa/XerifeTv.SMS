@@ -5,7 +5,10 @@ public sealed class InboxMessage
     public Guid EventId { get; private set; }
     public string HandlerKey { get; private set; } = default!;
     public string EventType { get; private set; } = default!;
-    public DateTime ProcessedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime? ReceivedAt { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+    public EInboxMessageStatus Status { get; private set; }
+    public string? ErrorMessage { get; private set; }
 
     private InboxMessage() { }
 
@@ -15,7 +18,22 @@ public sealed class InboxMessage
         {
             EventId = eventId,
             HandlerKey = handlerKey,
-            EventType = eventType
+            EventType = eventType,
+            Status = EInboxMessageStatus.PENDING,
+            ReceivedAt = DateTime.UtcNow
         };
+    }
+
+    public void MarkAsProcessed()
+    {
+        Status = EInboxMessageStatus.PROCESSED;
+        ProcessedAt = DateTime.UtcNow;
+    }
+
+    public void MarkAsFailed(string errorMessage)
+    {
+        Status = EInboxMessageStatus.FAILED;
+        ErrorMessage = errorMessage;
+        ProcessedAt = DateTime.UtcNow;
     }
 }

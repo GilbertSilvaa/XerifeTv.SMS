@@ -14,7 +14,7 @@ public class InboxRepositoryTests : IAsyncLifetime
     private readonly InboxDbFixture _fixture;
     private readonly InboxDbContext _dbContext;
     private readonly InboxRepository _repository;
-    private readonly IInboxUnitOfWork _unitOfWork;
+    private readonly InboxUnitOfWork _unitOfWork;
 
     public InboxRepositoryTests(InboxDbFixture fixture)
     {
@@ -44,7 +44,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var message = InboxMessage.Create(Guid.NewGuid(), "TestHandler", "TestEvent");
 
         // Act
-        await _repository.AddAsync(message);
+        await _repository.AddOrUpdateAsync(message);
         await _unitOfWork.SaveChangesAsync();
 
         // Assert
@@ -53,6 +53,7 @@ public class InboxRepositoryTests : IAsyncLifetime
             .FirstOrDefaultAsync(x => x.EventId == message.EventId);
 
         savedMessage.Should().NotBeNull();
+        savedMessage!.Status.Should().Be(EInboxMessageStatus.PENDING);
     }
 
     [Fact]
@@ -63,7 +64,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var message = InboxMessage.Create(eventId, "UserCreatedHandler", "UserCreatedEvent");
 
         // Act
-        await _repository.AddAsync(message);
+        await _repository.AddOrUpdateAsync(message);
         await _unitOfWork.SaveChangesAsync();
 
         // Assert
@@ -74,31 +75,85 @@ public class InboxRepositoryTests : IAsyncLifetime
         savedMessage.EventId.Should().Be(eventId);
         savedMessage.HandlerKey.Should().Be("UserCreatedHandler");
         savedMessage.EventType.Should().Be("UserCreatedEvent");
-        savedMessage.ProcessedAt.Should()
-            .BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        savedMessage.Status.Should().Be(EInboxMessageStatus.PENDING);
+        savedMessage.ReceivedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        savedMessage.ProcessedAt.Should().BeNull();
     }
 
     [Fact]
-    public async Task Should_ThrowUniqueConstraintViolationException_When_EventAlreadyExists()
+    public async Task Should_ThrowUniqueConstraintViolationException_When_EventAlreadyExistsAndIsPendingOrProcessing()
     {
         // Arrange
         var eventId = Guid.NewGuid();
         var first = InboxMessage.Create(eventId, "SameHandler", "Event");
         var duplicate = InboxMessage.Create(eventId, "SameHandler", "Event");
 
-        await _repository.AddAsync(first);
+        await _repository.AddOrUpdateAsync(first);
         await _unitOfWork.SaveChangesAsync();
+
         _dbContext.Entry(first).State = EntityState.Detached;
 
         // Act
         var action = async () =>
         {
-            await _repository.AddAsync(duplicate);
+            await _repository.AddOrUpdateAsync(duplicate);
             await _unitOfWork.SaveChangesAsync();
         };
 
         // Assert
         await action.Should().ThrowAsync<UniqueConstraintViolationException>();
+    }
+
+    [Fact]
+    public async Task Should_ThrowUniqueConstraintViolationException_Immediately_When_MessageIsAlreadyProcessed()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var message = InboxMessage.Create(eventId, "SameHandler", "Event");
+        message.MarkAsProcessed();
+
+        await _repository.AddOrUpdateAsync(message);
+        await _unitOfWork.SaveChangesAsync();
+        _dbContext.Entry(message).State = EntityState.Detached;
+
+        var duplicate = InboxMessage.Create(eventId, "SameHandler", "Event");
+
+        // Act
+        var action = async () =>
+        {
+            await _repository.AddOrUpdateAsync(duplicate);
+            await _unitOfWork.SaveChangesAsync();
+        };
+
+        // Assert
+        await action.Should().ThrowAsync<UniqueConstraintViolationException>();
+    }
+
+    [Fact]
+    public async Task Should_UpdateStatus_When_MessageExistsAsFailed()
+    {
+        // Arrange
+        var eventId = Guid.NewGuid();
+        var message = InboxMessage.Create(eventId, "RetryHandler", "Event");
+        message.MarkAsFailed("Erro de timeout na primeira tentativa");
+
+        await _repository.AddOrUpdateAsync(message);
+        await _unitOfWork.SaveChangesAsync();
+        _dbContext.Entry(message).State = EntityState.Detached;
+
+        var retryMessage = InboxMessage.Create(eventId, "RetryHandler", "Event");
+
+        // Act
+        await _repository.AddOrUpdateAsync(retryMessage);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Assert
+        var updatedMessage = await _dbContext
+            .Set<InboxMessage>()
+            .FirstAsync(x => x.EventId == eventId && x.HandlerKey == "RetryHandler");
+
+        updatedMessage.Status.Should().Be(EInboxMessageStatus.PENDING);
+        updatedMessage.ErrorMessage.Should().BeNull();
     }
 
     [Fact]
@@ -108,7 +163,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var eventId = Guid.NewGuid();
         var first = InboxMessage.Create(eventId, "SameHandler", "Event");
 
-        await _repository.AddAsync(first);
+        await _repository.AddOrUpdateAsync(first);
         await _unitOfWork.SaveChangesAsync();
         _dbContext.Entry(first).State = EntityState.Detached;
 
@@ -117,12 +172,13 @@ public class InboxRepositoryTests : IAsyncLifetime
         // Act
         var exception = await Assert.ThrowsAsync<UniqueConstraintViolationException>(async () =>
         {
-            await _repository.AddAsync(duplicate);
+            await _repository.AddOrUpdateAsync(duplicate);
             await _unitOfWork.SaveChangesAsync();
         });
 
         // Assert
         exception.InnerException.Should().NotBeNull();
+        exception.InnerException.Should().BeOfType<DbUpdateException>();
     }
 
     [Fact]
@@ -133,18 +189,21 @@ public class InboxRepositoryTests : IAsyncLifetime
         var first = InboxMessage.Create(eventId, "HandlerA", "UserCreatedEvent");
         var second = InboxMessage.Create(eventId, "HandlerB", "UserCreatedEvent");
 
-        await _repository.AddAsync(first);
+        await _repository.AddOrUpdateAsync(first);
         await _unitOfWork.SaveChangesAsync();
         _dbContext.Entry(first).State = EntityState.Detached;
 
         // Act
         var action = async () =>
         {
-            await _repository.AddAsync(second);
+            await _repository.AddOrUpdateAsync(second);
             await _unitOfWork.SaveChangesAsync();
         };
 
         // Assert
         await action.Should().NotThrowAsync();
+
+        var totalCount = await _dbContext.Set<InboxMessage>().CountAsync(x => x.EventId == eventId);
+        totalCount.Should().Be(2);
     }
 }

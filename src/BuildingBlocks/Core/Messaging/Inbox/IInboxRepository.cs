@@ -2,5 +2,5 @@
 
 public interface IInboxRepository
 {
-    Task AddAsync(InboxMessage entity);
+    Task AddOrUpdateAsync(InboxMessage entity);
 }

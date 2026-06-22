@@ -15,26 +15,61 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     private readonly Mock<IInboxRepository> _inboxRepositoryMock = new();
     private readonly Mock<IInboxUnitOfWork> _inboxUnitOfWorkMock = new();
 
-    private readonly HashSet<(Guid EventId, string HandlerKey)> _committed = new();
+    private readonly Dictionary<(Guid EventId, string HandlerKey), EInboxMessageStatus> _databaseState = [];
+
     private InboxMessage? _capturedMessage;
+    private bool _isNewInsertion;
 
     private readonly IdempotencyIntegrationEventHandlerBehavior _sut;
 
     public IdempotencyIntegrationEventHandlerBehaviorTests()
     {
         _inboxRepositoryMock
-            .Setup(r => r.AddAsync(It.IsAny<InboxMessage>()))
-            .Callback<InboxMessage>(message => _capturedMessage = message)
+            .Setup(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()))
+            .Callback<InboxMessage>(message =>
+            {
+                _capturedMessage = message;
+                var key = (message.EventId, message.HandlerKey);
+
+                if (_databaseState.TryGetValue(key, out var currentStatus))
+                {
+                    if (currentStatus == EInboxMessageStatus.PROCESSED)
+                    {
+                        throw new UniqueConstraintViolationException(
+                            "IX_InboxMessages_EventId_HandlerKey",
+                            new Exception("This message has been successfully processed previously."));
+                    }
+
+                    _isNewInsertion = false;
+                }
+                else
+                {
+                    _isNewInsertion = true;
+                }
+            })
             .Returns(Task.CompletedTask);
 
         _inboxUnitOfWorkMock
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
-                var key = (_capturedMessage!.EventId, _capturedMessage.HandlerKey);
+                if (_capturedMessage == null) return Task.CompletedTask;
 
-                if (!_committed.Add(key))
-                    throw new UniqueConstraintViolationException("IX_InboxMessages_EventId_HandlerKey");
+                var key = (_capturedMessage.EventId, _capturedMessage.HandlerKey);
+
+                if (_isNewInsertion)
+                {
+                    if (_databaseState.ContainsKey(key))
+                    {
+                        throw new UniqueConstraintViolationException("IX_InboxMessages_EventId_HandlerKey");
+                    }
+
+                    _databaseState.Add(key, _capturedMessage.Status);
+                }
+                else
+                {
+                    _databaseState[key] = _capturedMessage.Status;
+                }
 
                 return Task.CompletedTask;
             });
@@ -48,11 +83,10 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         _sut = new IdempotencyIntegrationEventHandlerBehavior(provider);
     }
 
-    private void SeedAsAlreadyProcessed(Guid eventId, string handlerKey) =>
-        _committed.Add((eventId, handlerKey));
+    private void SeedDatabaseState(Guid eventId, string handlerKey, EInboxMessageStatus status) =>
+        _databaseState[(eventId, handlerKey)] = status;
 
-    private static NotificationHandlerExecutor CreateExecutor<THandler>(
-        THandler handler)
+    private static NotificationHandlerExecutor CreateExecutor<THandler>(THandler handler)
         where THandler : IIntegrationEventHandler<FakeIntegrationEvent>
     {
         return new NotificationHandlerExecutor(
@@ -80,11 +114,11 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
 
         // Assert
         handlerCalled.Should().BeTrue();
-        _inboxRepositoryMock.Verify(r => r.AddAsync(It.IsAny<InboxMessage>()), Times.Never);
+        _inboxRepositoryMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()), Times.Never);
     }
 
     [Fact]
-    public async Task Should_ExecuteAndPersist_When_EventIsNewForHandler()
+    public async Task Should_ExecuteAndPersistAsProcessed_When_EventIsNewForHandler()
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
@@ -97,9 +131,15 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         await _sut.Publish([executor], @event, CancellationToken.None);
 
         // Assert
-        handlerMock.Verify(h => h.Handle(@event, It.IsAny<CancellationToken>()), Times.Once);
-        _inboxRepositoryMock.Verify(r => r.AddAsync(It.IsAny<InboxMessage>()), Times.Once);
-        _inboxUnitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        handlerMock.Verify(h => h.Handle(@event, It.IsAny<CancellationToken>()));
+
+        _inboxRepositoryMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()), Times.AtLeastOnce);
+        _inboxUnitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+
+        var expectedHandlerKey = handlerMock.Object.GetType().FullName!;
+        var key = (@event.EventId, expectedHandlerKey);
+
+        _databaseState.Should().ContainKey(key).WhoseValue.Should().Be(EInboxMessageStatus.PROCESSED);
     }
 
     [Fact]
@@ -107,19 +147,20 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
-
         var handler = new FakeIntegrationEventHandler();
 
-        SeedAsAlreadyProcessed(
+        SeedDatabaseState(
             @event.EventId,
-            typeof(FakeIntegrationEventHandler).FullName!);
+            typeof(FakeIntegrationEventHandler).FullName!,
+            EInboxMessageStatus.PROCESSED);
 
         var executor = CreateExecutor(handler);
 
         // Act
-        await _sut.Publish([executor], @event, CancellationToken.None);
+        var act = async () => await _sut.Publish([executor], @event, CancellationToken.None);
 
         // Assert
+        await act.Should().NotThrowAsync();
         handler.Executed.Should().BeFalse();
     }
 
@@ -132,9 +173,10 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         var alreadyProcessedHandler = new FakeIntegrationEventHandler();
         var pendingHandler = new SecondFakeIntegrationEventHandler();
 
-        SeedAsAlreadyProcessed(
+        SeedDatabaseState(
             @event.EventId,
-            typeof(FakeIntegrationEventHandler).FullName!);
+            typeof(FakeIntegrationEventHandler).FullName!,
+            EInboxMessageStatus.PROCESSED);
 
         var executors = new[]
         {
@@ -147,13 +189,14 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
 
         // Assert
         alreadyProcessedHandler.Executed.Should().BeFalse();
+        pendingHandler.Executed.Should().BeTrue();
 
-        pendingHandler.Executed.Should().BeTrue(
-            "a pending handler should execute even if another handler for the same event has already been processed");
+        var pendingKey = (@event.EventId, typeof(SecondFakeIntegrationEventHandler).FullName!);
+        _databaseState.Should().ContainKey(pendingKey).WhoseValue.Should().Be(EInboxMessageStatus.PROCESSED);
     }
 
     [Fact]
-    public async Task Should_PropagateException_When_HandlerThrowsNonUniqueConstraintError()
+    public async Task Should_PersistAsFailedAndPropagateException_When_HandlerThrowsNonUniqueConstraintError()
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
@@ -169,10 +212,15 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
+
+        var expectedHandlerKey = handlerMock.Object.GetType().FullName!;
+        var key = (@event.EventId, expectedHandlerKey);
+
+        _databaseState.Should().ContainKey(key).WhoseValue.Should().Be(EInboxMessageStatus.FAILED);
     }
 
     [Fact]
-    public async Task Should_StopProcessingRemainingHandlers_When_AnEarlierHandlerThrowsNonUniqueConstraintError()
+    public async Task Should_StopProcessingRemainingHandlers_And_PersistFirstAsFailed_When_AnEarlierHandlerThrows()
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
@@ -197,5 +245,9 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
         neverReachedHandlerMock.Verify(h => h.Handle(It.IsAny<FakeIntegrationEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        var expectedHandlerKey = failingHandlerMock.Object.GetType().FullName!;
+        var failingKey = (@event.EventId, expectedHandlerKey);
+        _databaseState.Should().ContainKey(failingKey).WhoseValue.Should().Be(EInboxMessageStatus.FAILED);
     }
 }
