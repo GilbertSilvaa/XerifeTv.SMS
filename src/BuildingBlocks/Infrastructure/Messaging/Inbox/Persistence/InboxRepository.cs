@@ -6,12 +6,14 @@ namespace BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
 
 public class InboxRepository : IInboxRepository
 {
+    private readonly int _lockTimeoutInMinutes;
     private readonly InboxDbContext _dbContext;
     private readonly DbSet<InboxMessage> _dataSet;
 
-    public InboxRepository(InboxDbContext dbContext)
+    public InboxRepository(InboxDbContext dbContext, int lockTimeoutInMinutes = 5)
     {
         _dbContext = dbContext;
+        _lockTimeoutInMinutes = lockTimeoutInMinutes;
         _dataSet = _dbContext.Set<InboxMessage>();
     }
 
@@ -26,10 +28,17 @@ public class InboxRepository : IInboxRepository
             return;
         }
 
-        if (existingMessage.Status == EInboxMessageStatus.PROCESSED
-            || (existingMessage.Status == EInboxMessageStatus.PENDING && entity.Status == EInboxMessageStatus.PENDING))
+        bool isAlreadyProcessed = existingMessage.Status == EInboxMessageStatus.PROCESSED;
+
+        bool isActivelyPending = existingMessage.Status == EInboxMessageStatus.PENDING
+            && !existingMessage.IsLockExpired(TimeSpan.FromMinutes(_lockTimeoutInMinutes), DateTime.UtcNow);
+
+        bool isDuplicateAttempt = isAlreadyProcessed
+            || (entity.Status == EInboxMessageStatus.PENDING && isActivelyPending);
+
+        if (isDuplicateAttempt)
         {
-            var reason = existingMessage.Status == EInboxMessageStatus.PROCESSED
+            var reason = isAlreadyProcessed
                 ? "This message has been successfully processed previously."
                 : "This message is already pending or being processed.";
 

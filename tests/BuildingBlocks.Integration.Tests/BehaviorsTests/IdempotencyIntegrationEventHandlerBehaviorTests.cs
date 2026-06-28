@@ -5,6 +5,7 @@ using BuildingBlocks.Infrastructure.Exceptions;
 using BuildingBlocks.Integration.Tests.Fakes;
 using FluentAssertions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -18,7 +19,6 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     private readonly Dictionary<(Guid EventId, string HandlerKey), EInboxMessageStatus> _databaseState = [];
 
     private InboxMessage? _capturedMessage;
-    private bool _isNewInsertion;
 
     private readonly IdempotencyIntegrationEventHandlerBehavior _sut;
 
@@ -29,23 +29,6 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
             .Callback<InboxMessage>(message =>
             {
                 _capturedMessage = message;
-                var key = (message.EventId, message.HandlerKey);
-
-                if (_databaseState.TryGetValue(key, out var currentStatus))
-                {
-                    if (currentStatus == EInboxMessageStatus.PROCESSED)
-                    {
-                        throw new UniqueConstraintViolationException(
-                            "IX_InboxMessages_EventId_HandlerKey",
-                            new Exception("This message has been successfully processed previously."));
-                    }
-
-                    _isNewInsertion = false;
-                }
-                else
-                {
-                    _isNewInsertion = true;
-                }
             })
             .Returns(Task.CompletedTask);
 
@@ -53,21 +36,22 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
-                if (_capturedMessage == null) return Task.CompletedTask;
+                if (_capturedMessage is null) return Task.CompletedTask;
 
                 var key = (_capturedMessage.EventId, _capturedMessage.HandlerKey);
 
-                if (_isNewInsertion)
+                if (!_databaseState.ContainsKey(key))
                 {
-                    if (_databaseState.ContainsKey(key))
-                    {
-                        throw new UniqueConstraintViolationException("IX_InboxMessages_EventId_HandlerKey");
-                    }
-
                     _databaseState.Add(key, _capturedMessage.Status);
                 }
                 else
                 {
+                    if (_databaseState[key] == EInboxMessageStatus.PROCESSED &&
+                        _capturedMessage.Status == EInboxMessageStatus.PENDING)
+                    {
+                        throw new UniqueConstraintViolationException("IX_InboxMessages_EventId_HandlerKey", new Exception("This message has been successfully processed previously."));
+                    }
+
                     _databaseState[key] = _capturedMessage.Status;
                 }
 
@@ -75,24 +59,33 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
             });
 
         var services = new ServiceCollection();
-        services.AddSingleton(_inboxRepositoryMock.Object);
-        services.AddSingleton(_inboxUnitOfWorkMock.Object);
+
+        services.AddScoped(_ => _inboxRepositoryMock.Object);
+        services.AddScoped(_ => _inboxUnitOfWorkMock.Object);
 
         var provider = services.BuildServiceProvider();
 
         _sut = new IdempotencyIntegrationEventHandlerBehavior(provider);
     }
 
-    private void SeedDatabaseState(Guid eventId, string handlerKey, EInboxMessageStatus status) =>
+    private void SeedDatabaseState(
+        Guid eventId,
+        string handlerKey,
+        EInboxMessageStatus status)
+    {
         _databaseState[(eventId, handlerKey)] = status;
+    }
 
-    private static NotificationHandlerExecutor CreateExecutor<THandler>(THandler handler)
+    private static NotificationHandlerExecutor CreateExecutor<THandler>(
+        THandler handler)
         where THandler : IIntegrationEventHandler<FakeIntegrationEvent>
     {
         return new NotificationHandlerExecutor(
             handler,
             (notification, cancellationToken) =>
-                handler.Handle((FakeIntegrationEvent)notification, cancellationToken));
+                handler.Handle(
+                    (FakeIntegrationEvent)notification,
+                    cancellationToken));
     }
 
     [Fact]
@@ -100,21 +93,31 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     {
         // Arrange
         var domainEvent = new FakeDomainEvent(Guid.NewGuid(), "SomeProperty");
+
         var notification = new DomainEventNotification<FakeDomainEvent>(domainEvent);
+
         var handlerCalled = false;
 
-        var executor = new NotificationHandlerExecutor(new object(), (_, _) =>
-        {
-            handlerCalled = true;
-            return Task.CompletedTask;
-        });
+        var executor = new NotificationHandlerExecutor(
+            new object(),
+            (_, _) =>
+            {
+                handlerCalled = true;
+                return Task.CompletedTask;
+            });
 
         // Act
-        await _sut.Publish([executor], notification, CancellationToken.None);
+        await _sut.Publish(
+            [executor],
+            notification,
+            CancellationToken.None);
 
         // Assert
         handlerCalled.Should().BeTrue();
-        _inboxRepositoryMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()), Times.Never);
+
+        _inboxRepositoryMock.Verify(
+            r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()),
+            Times.Never);
     }
 
     [Fact]
@@ -122,8 +125,14 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
+
         var handlerMock = new Mock<IIntegrationEventHandler<FakeIntegrationEvent>>();
-        handlerMock.Setup(h => h.Handle(@event, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        handlerMock
+            .Setup(h => h.Handle(
+                @event,
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         var executor = CreateExecutor(handlerMock.Object);
 
@@ -131,15 +140,21 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         await _sut.Publish([executor], @event, CancellationToken.None);
 
         // Assert
-        handlerMock.Verify(h => h.Handle(@event, It.IsAny<CancellationToken>()));
-
-        _inboxRepositoryMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()), Times.AtLeastOnce);
-        _inboxUnitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        handlerMock.Verify(
+            h => h.Handle(
+                @event,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
         var expectedHandlerKey = handlerMock.Object.GetType().FullName!;
+
         var key = (@event.EventId, expectedHandlerKey);
 
-        _databaseState.Should().ContainKey(key).WhoseValue.Should().Be(EInboxMessageStatus.PROCESSED);
+        _databaseState.Should()
+            .ContainKey(key)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.PROCESSED);
     }
 
     [Fact]
@@ -147,6 +162,7 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
+
         var handler = new FakeIntegrationEventHandler();
 
         SeedDatabaseState(
@@ -157,10 +173,14 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         var executor = CreateExecutor(handler);
 
         // Act
-        var act = async () => await _sut.Publish([executor], @event, CancellationToken.None);
+        var act = () => _sut.Publish(
+            [executor],
+            @event,
+            CancellationToken.None);
 
         // Assert
         await act.Should().NotThrowAsync();
+
         handler.Executed.Should().BeFalse();
     }
 
@@ -192,7 +212,12 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         pendingHandler.Executed.Should().BeTrue();
 
         var pendingKey = (@event.EventId, typeof(SecondFakeIntegrationEventHandler).FullName!);
-        _databaseState.Should().ContainKey(pendingKey).WhoseValue.Should().Be(EInboxMessageStatus.PROCESSED);
+
+        _databaseState.Should()
+            .ContainKey(pendingKey)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.PROCESSED);
     }
 
     [Fact]
@@ -200,23 +225,38 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
     {
         // Arrange
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
+
         var handlerMock = new Mock<IIntegrationEventHandler<FakeIntegrationEvent>>();
+
         handlerMock
-            .Setup(h => h.Handle(@event, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("boom"));
+            .Setup(h => h.Handle(
+                @event,
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new InvalidOperationException("boom"));
 
         var executor = CreateExecutor(handlerMock.Object);
 
         // Act
-        var act = async () => await _sut.Publish([executor], @event, CancellationToken.None);
+        var act = () => _sut.Publish(
+            [executor],
+            @event,
+            CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
 
         var expectedHandlerKey = handlerMock.Object.GetType().FullName!;
-        var key = (@event.EventId, expectedHandlerKey);
 
-        _databaseState.Should().ContainKey(key).WhoseValue.Should().Be(EInboxMessageStatus.FAILED);
+        var key = (
+            @event.EventId,
+            expectedHandlerKey);
+
+        _databaseState.Should()
+            .ContainKey(key)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.FAILED);
     }
 
     [Fact]
@@ -226,12 +266,15 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
 
         var failingHandlerMock = new Mock<IIntegrationEventHandler<FakeIntegrationEvent>>();
+
         failingHandlerMock
-            .Setup(h => h.Handle(@event, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("boom"));
+            .Setup(h => h.Handle(
+                @event,
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new InvalidOperationException("boom"));
 
         var neverReachedHandlerMock = new Mock<IIntegrationEventHandler<FakeIntegrationEvent>>();
-        neverReachedHandlerMock.As<IDisposable>();
 
         var executors = new[]
         {
@@ -240,14 +283,28 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
         };
 
         // Act
-        var act = async () => await _sut.Publish(executors, @event, CancellationToken.None);
+        var act = () => _sut.Publish(
+            executors,
+            @event,
+            CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
-        neverReachedHandlerMock.Verify(h => h.Handle(It.IsAny<FakeIntegrationEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        neverReachedHandlerMock.Verify(
+            h => h.Handle(
+                It.IsAny<FakeIntegrationEvent>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
 
         var expectedHandlerKey = failingHandlerMock.Object.GetType().FullName!;
+
         var failingKey = (@event.EventId, expectedHandlerKey);
-        _databaseState.Should().ContainKey(failingKey).WhoseValue.Should().Be(EInboxMessageStatus.FAILED);
+
+        _databaseState.Should()
+            .ContainKey(failingKey)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.FAILED);
     }
 }

@@ -46,21 +46,30 @@ public sealed class IdempotencyIntegrationEventHandlerBehavior : INotificationPu
 
                 inboxMessage.MarkAsProcessed();
                 await inboxRepository.AddOrUpdateAsync(inboxMessage);
+                await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (UniqueConstraintViolationException)
             {
                 continue;
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                continue;
+            }
             catch (Exception ex)
             {
-                inboxMessage.MarkAsFailed(ex.Message);
-                await inboxRepository.AddOrUpdateAsync(inboxMessage);
+                try
+                {
+                    inboxMessage.MarkAsFailed(ex.Message);
+                    await inboxRepository.AddOrUpdateAsync(inboxMessage);
+                    await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception ex2) when (ex2 is UniqueConstraintViolationException or DbUpdateConcurrencyException)
+                {
+                    continue;
+                }
 
                 throw;
-            }
-            finally
-            {
-                await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
             }
         }
     }

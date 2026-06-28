@@ -36,4 +36,9 @@ public sealed class InboxMessage
         ErrorMessage = errorMessage;
         ProcessedAt = DateTime.UtcNow;
     }
+
+    public bool IsLockExpired(TimeSpan lockTimeout, DateTime utcNow) =>
+        Status == EInboxMessageStatus.PENDING
+        && ReceivedAt.HasValue
+        && (utcNow - ReceivedAt.Value) > lockTimeout;
 }
