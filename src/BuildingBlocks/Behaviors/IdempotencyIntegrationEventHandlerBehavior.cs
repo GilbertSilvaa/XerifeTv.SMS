@@ -45,7 +45,6 @@ public sealed class IdempotencyIntegrationEventHandlerBehavior : INotificationPu
                 await handlerExecutor.HandlerCallback(notification, cancellationToken);
 
                 inboxMessage.MarkAsProcessed();
-                await inboxRepository.AddOrUpdateAsync(inboxMessage);
                 await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (UniqueConstraintViolationException)
@@ -61,7 +60,6 @@ public sealed class IdempotencyIntegrationEventHandlerBehavior : INotificationPu
                 try
                 {
                     inboxMessage.MarkAsFailed(ex.Message);
-                    await inboxRepository.AddOrUpdateAsync(inboxMessage);
                     await inboxUnitOfWork.SaveChangesAsync(cancellationToken);
                 }
                 catch (Exception ex2) when (ex2 is UniqueConstraintViolationException or DbUpdateConcurrencyException)
