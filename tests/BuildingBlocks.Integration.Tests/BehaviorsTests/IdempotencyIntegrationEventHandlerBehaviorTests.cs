@@ -307,4 +307,70 @@ public class IdempotencyIntegrationEventHandlerBehaviorTests
             .Should()
             .Be(EInboxMessageStatus.FAILED);
     }
+
+    [Fact]
+    public async Task Should_RetryAndPersistAsProcessed_When_EventWasPreviouslySavedAsFailed()
+    {
+        // Arrange
+        var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
+
+        var handler = new FakeIntegrationEventHandler();
+
+        SeedDatabaseState(
+            @event.EventId,
+            typeof(FakeIntegrationEventHandler).FullName!,
+            EInboxMessageStatus.FAILED);
+
+        var executor = CreateExecutor(handler);
+
+        // Act
+        await _sut.Publish([executor], @event, CancellationToken.None);
+
+        // Assert
+        handler.Executed.Should().BeTrue();
+
+        var key = (@event.EventId, typeof(FakeIntegrationEventHandler).FullName!);
+
+        _databaseState.Should()
+            .ContainKey(key)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.PROCESSED);
+    }
+
+    [Fact]
+    public async Task Should_RetryAndPersistAsFailed_When_EventWasPreviouslySavedAsFailedAndHandlerThrowsAgain()
+    {
+        // Arrange
+        var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
+
+        var handlerMock = new Mock<IIntegrationEventHandler<FakeIntegrationEvent>>();
+
+        handlerMock
+            .Setup(h => h.Handle(
+                @event,
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("still failing"));
+
+        SeedDatabaseState(
+            @event.EventId,
+            handlerMock.Object.GetType().FullName!,
+            EInboxMessageStatus.FAILED);
+
+        var executor = CreateExecutor(handlerMock.Object);
+
+        // Act
+        var act = () => _sut.Publish([executor], @event, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>();
+
+        var key = (@event.EventId, handlerMock.Object.GetType().FullName!);
+
+        _databaseState.Should()
+            .ContainKey(key)
+            .WhoseValue
+            .Should()
+            .Be(EInboxMessageStatus.FAILED);
+    }
 }
