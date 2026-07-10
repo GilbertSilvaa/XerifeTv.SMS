@@ -1,4 +1,11 @@
 ﻿using BuildingBlocks.Core;
+using BuildingBlocks.Core.Messaging;
+using BuildingBlocks.Core.Messaging.Inbox;
+using BuildingBlocks.Core.Messaging.Outbox;
+using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
+using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
+using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence;
+using BuildingBlocks.Infrastructure.Messaging.Publishers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +26,11 @@ public static class ServiceCollectionExtensions
         services.Decorate<IPlansReadRepository, CachedPlansReadRepository>();
         services.AddScoped<IUnitOfWork<Plan>, PlanUnitOfWork>();
         services.AddScoped<PlanCacheInvalidationInterceptor>();
+
+        services.AddScoped<IOutboxMessageDispatcher<Plan>, OutboxMessageDispatcher<Plan>>();
+        services.AddScoped<IIntegrationEventPublisher<Plan>, OutboxIntegrationEventPublisher<Plan>>();
+        services.AddScoped<IOutboxRepository<Plan>, OutboxRepository<Plan, PlanDbContext>>();
+        services.AddScoped<IInboxRepository<Plan>, InboxRepository<Plan, PlanDbContext>>();
 
         services.AddDbContext<PlanDbContext>((serviceProvider, options) =>
         {

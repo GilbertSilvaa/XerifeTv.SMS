@@ -1,15 +1,16 @@
 ﻿using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.IntegrationEvents.Plans;
+using Plans.Domain;
 using Plans.Domain.Events;
 
 namespace Plans.Application.DomainEventHandlers;
 
 public sealed class PlanCreatedEventHandler : IDomainEventHandler<PlanCreatedDomainEvent>
 {
-    private readonly IIntegrationEventPublisher _publisher;
+    private readonly IIntegrationEventPublisher<Plan> _publisher;
 
-    public PlanCreatedEventHandler(IIntegrationEventPublisher publisher)
+    public PlanCreatedEventHandler(IIntegrationEventPublisher<Plan> publisher)
     {
         _publisher = publisher;
     }

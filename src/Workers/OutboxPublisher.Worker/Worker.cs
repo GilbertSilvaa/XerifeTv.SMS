@@ -1,4 +1,7 @@
 using BuildingBlocks.Core.Messaging;
+using Identity.Infrastructure;
+using Plans.Domain;
+using Subscribers.Domain.Entities;
 
 namespace OutboxPublisher.Worker;
 
@@ -17,9 +20,15 @@ public class Worker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = _scopeFactory.CreateScope();
-            var outboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher>();
+            var planOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<Plan>>();
+            var subscriberOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<Subscriber>>();
+            var identityOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<UserIdentityAggregateRoot>>();
 
-            await outboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken);
+            await Task.WhenAll([
+                planOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken),
+                subscriberOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken),
+                identityOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken)
+                ]);
 
             await Task.Delay(millisecondsDelay: 2000, stoppingToken);
         }

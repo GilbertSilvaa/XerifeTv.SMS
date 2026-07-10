@@ -46,11 +46,6 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IDomainEventDispatcher, MediaRDomainEventDispatcher>();
         services.AddScoped<IIntegrationEventDispatcher, MediaRIntegrationEventDispatcher>();
-        services.AddScoped<IOutboxMessageDispatcher, OutboxMessageDispatcher>();
-        services.AddScoped<IIntegrationEventPublisher, OutboxIntegrationEventPublisher>();
-        services.AddScoped<IInboxUnitOfWork, InboxUnitOfWork>();
-        services.AddScoped<IOutboxRepository, OutboxRepository>();
-        services.AddScoped<IInboxRepository, InboxRepository>();
 
         //services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<ICacheService, DistributedLockCacheService>();
@@ -68,26 +63,9 @@ public static class ServiceCollectionExtensions
             return ConnectionMultiplexer.Connect(configuration["Redis:Connection"]!);
         });
 
-        services.AddDbContextFactory<OutboxDbContext>((serviceProvider, options) =>
-        {
-            options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly(typeof(OutboxDbContext).Assembly.FullName);
-            });
-        });
-
-        services.AddDbContext<InboxDbContext>((serviceProvider, options) =>
-        {
-            options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection"), npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly(typeof(InboxDbContext).Assembly.FullName);
-            });
-        });
-
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.NotificationPublisherType = typeof(IdempotencyIntegrationEventHandlerBehavior);
         });
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);

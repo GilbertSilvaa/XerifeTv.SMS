@@ -1,19 +1,25 @@
-﻿using BuildingBlocks.Core.Events;
+﻿using BuildingBlocks.Core;
+using BuildingBlocks.Core.Messaging.Inbox;
+using BuildingBlocks.Infrastructure;
 using BuildingBlocks.IntegrationEvents.Plans;
 using Subscribers.Application.PlanCatalog;
+using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class PlanScreensAdjustedIntegrationEventHandler : IIntegrationEventHandler<PlanScreensAdjustedIntegrationEvent>
+internal sealed class PlanScreensAdjustedIntegrationEventHandler : BaseIntegrationEventHandler<PlanScreensAdjustedIntegrationEvent, Subscriber>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
 
-    public PlanScreensAdjustedIntegrationEventHandler(IPlanCatalogRepository planCatalogRepository)
+    public PlanScreensAdjustedIntegrationEventHandler(
+        IPlanCatalogRepository planCatalogRepository,
+        IInboxRepository<Subscriber> inboxRepository,
+        IUnitOfWork<Subscriber> unitOfWork) : base(inboxRepository, unitOfWork)
     {
         _planCatalogRepository = planCatalogRepository;
     }
 
-    public async Task Handle(PlanScreensAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(PlanScreensAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         PlanItemCatalog? plan = await _planCatalogRepository.GetByIdAsync(notification.Id);
 

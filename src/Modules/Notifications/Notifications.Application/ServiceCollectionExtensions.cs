@@ -11,7 +11,6 @@ public static class ServiceCollectionExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.NotificationPublisherType = typeof(IdempotencyIntegrationEventHandlerBehavior);
         });
 
         return services;

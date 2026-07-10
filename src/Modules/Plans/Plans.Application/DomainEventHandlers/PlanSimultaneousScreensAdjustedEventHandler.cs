@@ -1,15 +1,16 @@
 ﻿using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.IntegrationEvents.Plans;
+using Plans.Domain;
 using Plans.Domain.Events;
 
 namespace Plans.Application.DomainEventHandlers;
 
 internal sealed class PlanSimultaneousScreensAdjustedEventHandler : IDomainEventHandler<PlanSimultaneousScreensAjustedDomainEvent>
 {
-	private readonly IIntegrationEventPublisher _publisher;
+	private readonly IIntegrationEventPublisher<Plan> _publisher;
 
-	public PlanSimultaneousScreensAdjustedEventHandler(IIntegrationEventPublisher publisher)
+	public PlanSimultaneousScreensAdjustedEventHandler(IIntegrationEventPublisher<Plan> publisher)
 	{
 		_publisher = publisher;
 	}

@@ -29,8 +29,6 @@ public sealed class PlanCatalogRepository : IPlanCatalogRepository
         {
             _dataSet.Update(plan);
         }
-
-        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<PlanItemCatalog?> GetByIdAsync(Guid id)
@@ -47,7 +45,5 @@ public sealed class PlanCatalogRepository : IPlanCatalogRepository
             plan.Delete();
             _dataSet.Update(plan);
         }
-
-        await _dbContext.SaveChangesAsync();
     }
 }

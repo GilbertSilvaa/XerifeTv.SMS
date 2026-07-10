@@ -25,8 +25,6 @@ public class ApplicationDbContext : DbContext
 			.Select(e => e.Entity)
 			.ToList();
 
-		var result = await base.SaveChangesAsync(cancellationToken);
-
 		var tasks = entitiesWithEvents
 			.SelectMany(e => e.DomainEvents)
 			.Select(domainEvent => _domainEventPublisher.DispatchAsync(domainEvent, cancellationToken));
@@ -35,6 +33,6 @@ public class ApplicationDbContext : DbContext
 
 		entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
 
-		return result;
+		return await base.SaveChangesAsync(cancellationToken);
 	}
 }

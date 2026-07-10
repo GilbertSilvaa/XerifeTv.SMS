@@ -1,30 +1,35 @@
-﻿using BuildingBlocks.Core.Events;
+﻿using BuildingBlocks.Core;
 using BuildingBlocks.Core.Messaging;
+using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Core.Pagination;
+using BuildingBlocks.Infrastructure;
 using BuildingBlocks.IntegrationEvents.Subscribers;
 using Subscribers.Application.Queries.ReadModels;
+using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
 internal sealed class NotifyPlanPriceSubscribersBatchRequestedIntegrationEventHandler
-    : IIntegrationEventHandler<NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent>
+    : BaseIntegrationEventHandler<NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent, Subscriber>
 {
     private readonly int _batchSize;
 
     private readonly ISubscribersReadRepository _subscribersReadRepository;
-    private readonly IIntegrationEventPublisher _integrationEventPublisher;
+    private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
     public NotifyPlanPriceSubscribersBatchRequestedIntegrationEventHandler(
         ISubscribersReadRepository subscribersReadRepository,
-        IIntegrationEventPublisher integrationEventPublisher,
-        int? batchSize = null)
+        IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
+        IInboxRepository<Subscriber> inboxRepository,
+        IUnitOfWork<Subscriber> unitOfWork,
+        int? batchSize = null) : base(inboxRepository, unitOfWork)
     {
         _batchSize = batchSize ?? 100;
         _subscribersReadRepository = subscribersReadRepository;
         _integrationEventPublisher = integrationEventPublisher;
     }
 
-    public async Task Handle(NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         var subscribers = await _subscribersReadRepository.GetSubscribersByPlanIdAsync(
             notification.PlanId,

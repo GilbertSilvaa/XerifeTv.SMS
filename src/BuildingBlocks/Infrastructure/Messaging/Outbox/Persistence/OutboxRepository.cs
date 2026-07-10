@@ -1,14 +1,17 @@
 ﻿using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence.Database;
+using SharedKernel;
 
 namespace BuildingBlocks.Infrastructure.Messaging.Outbox.Persistence;
 
-public class OutboxRepository : IOutboxRepository
+public class OutboxRepository<TAggregateRoot, TDbContext> : IOutboxRepository<TAggregateRoot>
+    where TDbContext : DbContext
+    where TAggregateRoot : AggregateRoot
 {
-    private readonly OutboxDbContext _dbContext;
+    private readonly DbContext _dbContext;
     private readonly DbSet<OutboxMessage> _dataSet;
 
-    public OutboxRepository(OutboxDbContext dbContext)
+    public OutboxRepository(TDbContext dbContext)
     {
         _dbContext = dbContext;
         _dataSet = _dbContext.Set<OutboxMessage>();
@@ -28,8 +31,6 @@ public class OutboxRepository : IOutboxRepository
         {
             _dataSet.Update(entity);
         }
-
-        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<OutboxMessage>> FetchByStatusAsync(EOutboxMessageStatus status, int take)

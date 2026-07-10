@@ -3,16 +3,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database.Migrations
+namespace Plans.Infrastructure.Persistence.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialOutbox : Migration
+    public partial class AddPlanOutboxMessages : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "OutboxMessages",
+                name: "PlanOutboxMessages",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -27,17 +27,17 @@ namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OutboxMessages", x => x.Id);
+                    table.PrimaryKey("PK_PlanOutboxMessages", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_OutboxMessages_Status",
-                table: "OutboxMessages",
+                name: "IX_PlanOutboxMessages_Status",
+                table: "PlanOutboxMessages",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OutboxMessages_Status_CreatedAt",
-                table: "OutboxMessages",
+                name: "IX_PlanOutboxMessages_Status_CreatedAt",
+                table: "PlanOutboxMessages",
                 columns: new[] { "Status", "CreatedAt" });
         }
 
@@ -45,7 +45,7 @@ namespace BuildingBlocks.Infrastructure.Outbox.Persistence.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "OutboxMessages");
+                name: "PlanOutboxMessages");
         }
     }
 }

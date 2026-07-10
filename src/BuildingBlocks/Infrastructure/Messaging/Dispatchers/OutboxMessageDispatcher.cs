@@ -1,18 +1,25 @@
 ﻿using BuildingBlocks.Common;
+using BuildingBlocks.Core;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Messaging.Outbox;
+using SharedKernel;
 
 namespace BuildingBlocks.Infrastructure.Messaging.Dispatchers;
 
-public sealed class OutboxMessageDispatcher : IOutboxMessageDispatcher
+public sealed class OutboxMessageDispatcher<TAggregateRoot> : IOutboxMessageDispatcher<TAggregateRoot>
+    where TAggregateRoot : AggregateRoot
 {
     private readonly IMessageBus _messageBus;
-    private readonly IOutboxRepository _repository;
+    private readonly IOutboxRepository<TAggregateRoot> _repository;
+    private readonly IUnitOfWork<TAggregateRoot> _unitOfWork;
 
-    public OutboxMessageDispatcher(IMessageBus messageBus, IOutboxRepository repository)
+    public OutboxMessageDispatcher(IMessageBus messageBus, 
+        IOutboxRepository<TAggregateRoot> repository, 
+        IUnitOfWork<TAggregateRoot> unitOfWork)
     {
         _messageBus = messageBus;
         _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task DispatchAsync(int maxRetriesPublish, CancellationToken cancellationToken)
@@ -46,6 +53,10 @@ public sealed class OutboxMessageDispatcher : IOutboxMessageDispatcher
                     {
                         message.MarkAsFailed();
                         await _repository.AddOrUpdateAsync(message);
+                    }
+                    finally
+                    {
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);

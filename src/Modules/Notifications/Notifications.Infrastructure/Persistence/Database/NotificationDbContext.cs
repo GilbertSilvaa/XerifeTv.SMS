@@ -1,13 +1,15 @@
 ﻿using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Infrastructure.Database;
+using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
+using Microsoft.EntityFrameworkCore;
 
-namespace BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
+namespace Notifications.Infrastructure.Persistence.Database;
 
-public class InboxDbContext : ApplicationDbContext
+public class NotificationDbContext : ApplicationDbContext
 {
-    public InboxDbContext(
-        DbContextOptions<InboxDbContext> options, 
+    public NotificationDbContext(
+        DbContextOptions<NotificationDbContext> options,
         IDomainEventDispatcher eventPublisher) : base(options, eventPublisher) { }
 
     public DbSet<InboxMessage> InboxMessages { get; set; }
@@ -16,10 +18,7 @@ public class InboxDbContext : ApplicationDbContext
     {
         modelBuilder.ApplyConfiguration(new InboxConfiguration());
         base.OnModelCreating(modelBuilder);
-    }
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await base.SaveChangesAsync(cancellationToken);
+        modelBuilder.Entity<InboxMessage>().ToTable("NotificationInboxMessages");
     }
 }

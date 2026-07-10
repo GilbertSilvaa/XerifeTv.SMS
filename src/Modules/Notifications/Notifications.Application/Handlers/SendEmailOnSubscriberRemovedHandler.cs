@@ -1,19 +1,26 @@
-﻿using BuildingBlocks.Core.Events;
+﻿using BuildingBlocks.Core;
+using BuildingBlocks.Core.Messaging.Inbox;
+using BuildingBlocks.Infrastructure;
 using BuildingBlocks.IntegrationEvents.Identity;
-using Notifications.Application.Abstractions;
+using Notifications.Infrastructure;
+using Notifications.Infrastructure.Email.Abstractions;
 
 namespace Notifications.Application.Handlers;
 
-internal sealed class SendEmailOnSubscriberRemovedHandler : IIntegrationEventHandler<UserSubscriberRemovedIntegrationEvent>
+internal sealed class SendEmailOnSubscriberRemovedHandler
+    : BaseIntegrationEventHandler<UserSubscriberRemovedIntegrationEvent, NotificationAggregateRoot>
 {
     private readonly IEmailSender _emailSender;
 
-    public SendEmailOnSubscriberRemovedHandler(IEmailSender emailSender)
+    public SendEmailOnSubscriberRemovedHandler(
+        IEmailSender emailSender,
+        IInboxRepository<NotificationAggregateRoot> inboxRepository,
+        IUnitOfWork<NotificationAggregateRoot> unitOfWork) : base(inboxRepository, unitOfWork)
     {
         _emailSender = emailSender;
     }
 
-    public async Task Handle(UserSubscriberRemovedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(UserSubscriberRemovedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         EmailMessage email = new(
             To: notification.Email,

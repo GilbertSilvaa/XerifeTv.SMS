@@ -1,15 +1,16 @@
 ﻿using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.IntegrationEvents.Subscribers;
+using Subscribers.Domain.Entities;
 using Subscribers.Domain.Events;
 
 namespace Subscribers.Application.DomainEventHandlers;
 
 internal sealed class SubscriberCreatedEventHandler : IDomainEventHandler<SubscriberCreatedDomainEvent>
 {
-    private readonly IIntegrationEventPublisher _publisher;
+    private readonly IIntegrationEventPublisher<Subscriber> _publisher;
 
-    public SubscriberCreatedEventHandler(IIntegrationEventPublisher publisher)
+    public SubscriberCreatedEventHandler(IIntegrationEventPublisher<Subscriber> publisher)
     {
         _publisher = publisher;
     }

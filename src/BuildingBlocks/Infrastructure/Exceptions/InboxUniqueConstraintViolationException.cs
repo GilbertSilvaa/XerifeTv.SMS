@@ -1,10 +1,10 @@
 ﻿namespace BuildingBlocks.Infrastructure.Exceptions;
 
-public sealed class UniqueConstraintViolationException : Exception
+public sealed class InboxUniqueConstraintViolationException : Exception
 {
     public string? ConstraintName { get; }
 
-    public UniqueConstraintViolationException(
+    public InboxUniqueConstraintViolationException(
         string? constraintName = null,
         Exception? innerException = null)
         : base("A unique constraint was violated.", innerException)

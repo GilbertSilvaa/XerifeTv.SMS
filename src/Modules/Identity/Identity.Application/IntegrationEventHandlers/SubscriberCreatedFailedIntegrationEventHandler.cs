@@ -1,25 +1,30 @@
-﻿using BuildingBlocks.Core.Events;
+﻿using BuildingBlocks.Core;
 using BuildingBlocks.Core.Messaging;
+using BuildingBlocks.Core.Messaging.Inbox;
+using BuildingBlocks.Infrastructure;
 using BuildingBlocks.IntegrationEvents.Identity;
 using BuildingBlocks.IntegrationEvents.Subscribers;
+using Identity.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Application.IntegrationEventHandlers;
 
-internal sealed class SubscriberCreatedFailedIntegrationEventHandler : IIntegrationEventHandler<SubscriberCreationFailedIntegrationEvent>
+internal sealed class SubscriberCreatedFailedIntegrationEventHandler : BaseIntegrationEventHandler<SubscriberCreationFailedIntegrationEvent, UserIdentityAggregateRoot>
 {
     private readonly UserManager<IdentityUser> _userManager;
-    private readonly IIntegrationEventPublisher _integrationEventPublisher;
+    private readonly IIntegrationEventPublisher<UserIdentityAggregateRoot> _integrationEventPublisher;
 
     public SubscriberCreatedFailedIntegrationEventHandler(
         UserManager<IdentityUser> userManager,
-        IIntegrationEventPublisher integrationEventPublisher)
+        IIntegrationEventPublisher<UserIdentityAggregateRoot> integrationEventPublisher,
+        IInboxRepository<UserIdentityAggregateRoot> inboxRepository,
+        IUnitOfWork<UserIdentityAggregateRoot> unitOfWork) : base(inboxRepository, unitOfWork)
     {
         _userManager = userManager;
         _integrationEventPublisher = integrationEventPublisher;
     }
 
-    public async Task Handle(SubscriberCreationFailedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(SubscriberCreationFailedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByEmailAsync(notification.Email);
 

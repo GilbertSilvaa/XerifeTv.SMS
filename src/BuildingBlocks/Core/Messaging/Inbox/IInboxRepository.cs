@@ -1,6 +1,8 @@
-﻿namespace BuildingBlocks.Core.Messaging.Inbox;
+﻿using SharedKernel;
 
-public interface IInboxRepository
+namespace BuildingBlocks.Core.Messaging.Inbox;
+
+public interface IInboxRepository<TAggregateRoot> where TAggregateRoot : AggregateRoot
 {
     Task AddOrUpdateAsync(InboxMessage entity);
 }

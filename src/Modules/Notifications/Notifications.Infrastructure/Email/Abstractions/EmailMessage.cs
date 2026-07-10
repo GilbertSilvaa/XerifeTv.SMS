@@ -1,4 +1,4 @@
-﻿namespace Notifications.Application.Abstractions;
+﻿namespace Notifications.Infrastructure.Email.Abstractions;
 
 public record EmailMessage(
     string To,

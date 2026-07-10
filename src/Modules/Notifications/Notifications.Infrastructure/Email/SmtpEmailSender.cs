@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using Notifications.Application.Abstractions;
+using Notifications.Infrastructure.Email.Abstractions;
 using System.Net;
 using System.Net.Mail;
 

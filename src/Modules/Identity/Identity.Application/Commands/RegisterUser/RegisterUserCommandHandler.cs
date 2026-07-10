@@ -1,6 +1,9 @@
-﻿using BuildingBlocks.Core.CQRS;
+﻿using BuildingBlocks.Core;
+using BuildingBlocks.Core.CQRS;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.IntegrationEvents.Identity;
+using Identity.Infrastructure;
+using Identity.Infrastructure.Persistence.Database;
 using Microsoft.AspNetCore.Identity;
 using SharedKernel;
 
@@ -8,49 +11,53 @@ namespace Identity.Application.Commands.RegisterUser;
 
 internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, Result>
 {
-	private readonly UserManager<IdentityUser> _userManager;
-	private readonly RoleManager<IdentityRole> _roleManager;
-	public readonly IIntegrationEventPublisher _integrationEventPublisher;
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    public readonly IIntegrationEventPublisher<UserIdentityAggregateRoot> _integrationEventPublisher;
+    public readonly IUnitOfWork<UserIdentityAggregateRoot> _unitOfWork;
 
-	public RegisterUserCommandHandler(
-		UserManager<IdentityUser> userManager,
-		RoleManager<IdentityRole> roleManager,
-		IIntegrationEventPublisher integrationEventPublisher)
-	{
-		_userManager = userManager;
-		_roleManager = roleManager;
-		_integrationEventPublisher = integrationEventPublisher;
-	}
+    public RegisterUserCommandHandler(
+        UserManager<IdentityUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IIntegrationEventPublisher<UserIdentityAggregateRoot> integrationEventPublisher,
+        IUnitOfWork<UserIdentityAggregateRoot> unitOfWork)
+    {
+        _userManager = userManager;
+        _roleManager = roleManager;
+        _integrationEventPublisher = integrationEventPublisher;
+        _unitOfWork = unitOfWork;
+    }
 
-	public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
-	{
-		IdentityUser user = new()
-		{
-			UserName = request.UserName,
-			Email = request.Email
-		};
+    public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    {
+        IdentityUser user = new()
+        {
+            UserName = request.UserName,
+            Email = request.Email
+        };
 
-		var result = await _userManager.CreateAsync(user, request.Password);
+        var result = await _userManager.CreateAsync(user, request.Password);
 
-		if (!result.Succeeded)
-		{
-			string errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
-			return Result.Failure(new Error("RegisterUser.Error", errorMessage));
-		}
+        if (!result.Succeeded)
+        {
+            string errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            return Result.Failure(new Error("RegisterUser.Error", errorMessage));
+        }
 
-		if (!await _roleManager.RoleExistsAsync(request.Role.ToString()))
-			await _roleManager.CreateAsync(new IdentityRole(request.Role.ToString()));
+        if (!await _roleManager.RoleExistsAsync(request.Role.ToString()))
+            await _roleManager.CreateAsync(new IdentityRole(request.Role.ToString()));
 
-		var addRoleResult = await _userManager.AddToRoleAsync(user, request.Role.ToString());
+        var addRoleResult = await _userManager.AddToRoleAsync(user, request.Role.ToString());
 
-		if (addRoleResult.Succeeded && request.Role == Enums.EUserRole.SUBSCRIBER)
-		{
-			var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName, Guid.Parse(user.Id));
-			await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
+        if (addRoleResult.Succeeded && request.Role == Enums.EUserRole.SUBSCRIBER)
+        {
+            var integrationEvent = new UserSubscriberCreatedIntegrationEvent(user.Email, user.UserName, Guid.Parse(user.Id));
+            await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-			return Result.Success();
-		}
-		
-		return Result.Failure(new Error("RegisterUser.FailedAssignRole", "Failed to assign role to user."));
+            return Result.Success();
+        }
+
+        return Result.Failure(new Error("RegisterUser.FailedAssignRole", "Failed to assign role to user."));
     }
 }
