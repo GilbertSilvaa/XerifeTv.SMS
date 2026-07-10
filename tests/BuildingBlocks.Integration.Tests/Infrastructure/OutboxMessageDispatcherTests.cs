@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Common;
+using BuildingBlocks.Core;
 using BuildingBlocks.Core.Messaging;
 using BuildingBlocks.Core.Messaging.Outbox;
 using BuildingBlocks.Infrastructure.Messaging.Dispatchers;
@@ -10,16 +11,18 @@ namespace BuildingBlocks.Integration.Tests.Infrastructure;
 
 public class OutboxMessageDispatcherTests
 {
-    private readonly Mock<IOutboxRepository> _outboxRepositoryMock;
+    private readonly Mock<IOutboxRepository<FakeAggregate>> _outboxRepositoryMock;
+    private readonly Mock<IUnitOfWork<FakeAggregate>> _unitOfWorkMock;
     private readonly Mock<IMessageBus> _messageBusMock;
-    private readonly IOutboxMessageDispatcher _dispatcher;
+    private readonly IOutboxMessageDispatcher<FakeAggregate> _dispatcher;
 
     public OutboxMessageDispatcherTests()
     {
-        _outboxRepositoryMock = new Mock<IOutboxRepository>();
+        _outboxRepositoryMock = new Mock<IOutboxRepository<FakeAggregate>>();
         _messageBusMock = new Mock<IMessageBus>();
+        _unitOfWorkMock = new Mock<IUnitOfWork<FakeAggregate>>();
 
-        _dispatcher = new OutboxMessageDispatcher(_messageBusMock.Object, _outboxRepositoryMock.Object);
+        _dispatcher = new OutboxMessageDispatcher<FakeAggregate>(_messageBusMock.Object, _outboxRepositoryMock.Object, _unitOfWorkMock.Object);
     }
 
     [Fact]

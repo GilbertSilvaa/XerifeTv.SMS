@@ -66,13 +66,3 @@ public class FakeDbFixure() : PostgreSqlFixture<FakeDbContext>(options => new Fa
 
 [CollectionDefinition("PostgresFakeDbContext")]
 public class PostgresCollectionFakeDbContext : ICollectionFixture<FakeDbFixure>;
-
-public class OutboxDbFixture() : PostgreSqlFixture<OutboxDbContext>(options => new OutboxDbContext(options, default!));
-
-[CollectionDefinition("PostgresOutboxDbContext")]
-public class PostgresCollectionOutboxDbContext : ICollectionFixture<OutboxDbFixture>;
-
-public class InboxDbFixture() : PostgreSqlFixture<InboxDbContext>(options => new InboxDbContext(options, default!));
-
-[CollectionDefinition("PostgresInboxDbContext")]
-public class PostgresCollectionInboxDbContext : ICollectionFixture<InboxDbFixture>;

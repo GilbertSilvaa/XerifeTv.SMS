@@ -2,31 +2,30 @@
 using BuildingBlocks.Infrastructure.Exceptions;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence;
 using BuildingBlocks.Infrastructure.Messaging.Inbox.Persistence.Database;
+using BuildingBlocks.Integration.Tests.Fakes;
 using BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BuildingBlocks.Integration.Tests.Infrastructure;
 
-[Collection("PostgresInboxDbContext")]
+[Collection("PostgresFakeDbContext")]
 public class InboxRepositoryTests : IAsyncLifetime
 {
-    private readonly InboxDbFixture _fixture;
-    private readonly InboxDbContext _dbContext;
-    private readonly InboxRepository _repository;
-    private readonly InboxUnitOfWork _unitOfWork;
+    private readonly FakeDbFixure _fixture;
+    private readonly FakeDbContext _dbContext;
+    private readonly InboxRepository<FakeAggregate, FakeDbContext> _repository;
 
-    public InboxRepositoryTests(InboxDbFixture fixture)
+    public InboxRepositoryTests(FakeDbFixure fixture)
     {
         _fixture = fixture;
 
-        var options = new DbContextOptionsBuilder<InboxDbContext>()
+        var options = new DbContextOptionsBuilder<FakeDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
             .Options;
 
-        _dbContext = new InboxDbContext(options, default!);
-        _repository = new InboxRepository(_dbContext);
-        _unitOfWork = new InboxUnitOfWork(_dbContext);
+        _dbContext = new FakeDbContext(options);
+        _repository = new InboxRepository<FakeAggregate, FakeDbContext>(_dbContext);
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
@@ -37,17 +36,17 @@ public class InboxRepositoryTests : IAsyncLifetime
         await _fixture.ResetDatabaseAsync();
     }
 
-    private InboxDbContext CreateWorkerContext()
+    private FakeDbContext CreateWorkerContext()
     {
-        var options = new DbContextOptionsBuilder<InboxDbContext>()
+        var options = new DbContextOptionsBuilder<FakeDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
             .Options;
 
-        return new InboxDbContext(options, default!);
+        return new FakeDbContext(options);
     }
 
     private static async Task BackdateReceivedAtAsync(
-        InboxDbContext context, InboxMessage trackedMessage, TimeSpan elapsed)
+        FakeDbContext context, InboxMessage trackedMessage, TimeSpan elapsed)
     {
         context.Entry(trackedMessage).Property(nameof(InboxMessage.ReceivedAt)).CurrentValue =
             DateTime.UtcNow - elapsed;
@@ -62,7 +61,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var message = InboxMessage.Create(Guid.NewGuid(), "TestHandler", "TestEvent");
 
         await _repository.AddOrUpdateAsync(message);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var savedMessage = await _dbContext
@@ -82,7 +81,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var message = InboxMessage.Create(eventId, "UserCreatedHandler", "UserCreatedEvent");
 
         await _repository.AddOrUpdateAsync(message);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var savedMessage = await _dbContext
@@ -107,7 +106,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var duplicate = InboxMessage.Create(eventId, "SameHandler", "Event");
 
         await _repository.AddOrUpdateAsync(first);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         _dbContext.Entry(first).State = EntityState.Detached;
 
@@ -115,11 +114,11 @@ public class InboxRepositoryTests : IAsyncLifetime
         var action = async () =>
         {
             await _repository.AddOrUpdateAsync(duplicate);
-            await _unitOfWork.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         };
 
         // Assert
-        await action.Should().ThrowAsync<UniqueConstraintViolationException>();
+        await action.Should().ThrowAsync<InboxUniqueConstraintViolationException>();
     }
 
     [Fact]
@@ -131,7 +130,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         message.MarkAsProcessed();
 
         await _repository.AddOrUpdateAsync(message);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         _dbContext.Entry(message).State = EntityState.Detached;
 
         var duplicate = InboxMessage.Create(eventId, "SameHandler", "Event");
@@ -140,11 +139,11 @@ public class InboxRepositoryTests : IAsyncLifetime
         var action = async () =>
         {
             await _repository.AddOrUpdateAsync(duplicate);
-            await _unitOfWork.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         };
 
         // Assert
-        await action.Should().ThrowAsync<UniqueConstraintViolationException>();
+        await action.Should().ThrowAsync<InboxUniqueConstraintViolationException>();
     }
 
     [Fact]
@@ -157,13 +156,13 @@ public class InboxRepositoryTests : IAsyncLifetime
 
         // Act
         await _repository.AddOrUpdateAsync(message);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         _dbContext.Entry(message).State = EntityState.Detached;
 
         var retryMessage = InboxMessage.Create(eventId, "RetryHandler", "Event");
 
         await _repository.AddOrUpdateAsync(retryMessage);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         var updatedMessage = await _dbContext
             .Set<InboxMessage>()
@@ -182,16 +181,16 @@ public class InboxRepositoryTests : IAsyncLifetime
         var first = InboxMessage.Create(eventId, "SameHandler", "Event");
 
         await _repository.AddOrUpdateAsync(first);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         _dbContext.Entry(first).State = EntityState.Detached;
 
         var duplicate = InboxMessage.Create(eventId, "SameHandler", "Event");
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<UniqueConstraintViolationException>(async () =>
+        var exception = await Assert.ThrowsAsync<InboxUniqueConstraintViolationException>(async () =>
         {
             await _repository.AddOrUpdateAsync(duplicate);
-            await _unitOfWork.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         });
 
         exception.InnerException.Should().NotBeNull();
@@ -207,14 +206,14 @@ public class InboxRepositoryTests : IAsyncLifetime
         var second = InboxMessage.Create(eventId, "HandlerB", "UserCreatedEvent");
 
         await _repository.AddOrUpdateAsync(first);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         _dbContext.Entry(first).State = EntityState.Detached;
 
         // Act
         var action = async () =>
         {
             await _repository.AddOrUpdateAsync(second);
-            await _unitOfWork.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         };
 
         // Assert
@@ -233,10 +232,10 @@ public class InboxRepositoryTests : IAsyncLifetime
 
         // Act
         await _repository.AddOrUpdateAsync(pending);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         pending.MarkAsProcessed();
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         var updated = await _dbContext
             .Set<InboxMessage>()
@@ -251,13 +250,13 @@ public class InboxRepositoryTests : IAsyncLifetime
     public async Task Should_AllowReclaim_When_PendingLockHasExpired()
     {
         // Arrange
-        var repository = new InboxRepository(_dbContext, lockTimeoutInMinutes: 0);
+        var repository = new InboxRepository<FakeAggregate, FakeDbContext>(_dbContext, lockTimeoutInMinutes: 0);
 
         var eventId = Guid.NewGuid();
         var original = InboxMessage.Create(eventId, "ExpiringHandler", "Event");
 
         await repository.AddOrUpdateAsync(original);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         await BackdateReceivedAtAsync(_dbContext, original, TimeSpan.FromMinutes(1));
         _dbContext.Entry(original).State = EntityState.Detached;
@@ -268,7 +267,7 @@ public class InboxRepositoryTests : IAsyncLifetime
         var action = async () =>
         {
             await repository.AddOrUpdateAsync(reclaim);
-            await _unitOfWork.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         };
 
         await action.Should().NotThrowAsync();
@@ -291,7 +290,7 @@ public class InboxRepositoryTests : IAsyncLifetime
 
         var original = InboxMessage.Create(eventId, handlerKey, "Event");
         await _repository.AddOrUpdateAsync(original);
-        await _unitOfWork.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
         _dbContext.Entry(original).State = EntityState.Detached;
 
         var workerA = CreateWorkerContext();

@@ -8,23 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BuildingBlocks.Integration.Tests.Infrastructure;
 
-[Collection("PostgresOutboxDbContext")]
+[Collection("PostgresFakeDbContext")]
 public class OutboxRepositoryTests : IAsyncLifetime
 {
-    private readonly OutboxDbFixture _fixture;
-    private readonly OutboxDbContext _dbContext;
-    private readonly OutboxRepository _repository;
+    private readonly FakeDbFixure _fixture;
+    private readonly FakeDbContext _dbContext;
+    private readonly OutboxRepository<FakeAggregate, FakeDbContext> _repository;
 
-    public OutboxRepositoryTests(OutboxDbFixture fixture)
+    public OutboxRepositoryTests(FakeDbFixure fixture)
     {
         _fixture = fixture;
 
-        var options = new DbContextOptionsBuilder<OutboxDbContext>()
+        var options = new DbContextOptionsBuilder<FakeDbContext>()
             .UseNpgsql(_fixture.ConnectionString)
             .Options;
 
-        _dbContext = new OutboxDbContext(options, default!);
-        _repository = new OutboxRepository(_dbContext);
+        _dbContext = new FakeDbContext(options);
+        _repository = new OutboxRepository<FakeAggregate, FakeDbContext>(_dbContext);
     }
 
     public Task InitializeAsync()
@@ -46,6 +46,7 @@ public class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         await _repository.AddOrUpdateAsync(message);
+        await _dbContext.SaveChangesAsync();
 
         // Assert
         var savedMessage = await _dbContext
@@ -63,6 +64,7 @@ public class OutboxRepositoryTests : IAsyncLifetime
         var message = CreateMessage(EOutboxMessageStatus.PENDING);
 
         await _repository.AddOrUpdateAsync(message);
+        await _dbContext.SaveChangesAsync();
 
         _dbContext.Entry(message).State = EntityState.Detached;
 
@@ -74,6 +76,7 @@ public class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         await _repository.AddOrUpdateAsync(existingMessage);
+        await _dbContext.SaveChangesAsync();
 
         // Assert
         var updatedMessage = await _dbContext
@@ -92,6 +95,7 @@ public class OutboxRepositoryTests : IAsyncLifetime
 
         await _repository.AddOrUpdateAsync(pending);
         await _repository.AddOrUpdateAsync(processed);
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var result = await _repository.FetchByStatusAsync(EOutboxMessageStatus.PENDING, 10);
@@ -107,6 +111,8 @@ public class OutboxRepositoryTests : IAsyncLifetime
         // Arrange
         for (int i = 0; i < 5; i++)
             await _repository.AddOrUpdateAsync(CreateMessage(EOutboxMessageStatus.PENDING));
+
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var result = await _repository.FetchByStatusAsync(EOutboxMessageStatus.PENDING, 2);
