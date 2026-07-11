@@ -3,6 +3,6 @@
 public abstract record DomainEvent
 {
     public Guid EventId { get; init; } = Guid.NewGuid();
-    public readonly DateTime OccurredOn = DateTime.UtcNow;
+    public DateTime OccurredOn { get; init; } = DateTime.UtcNow;
     public string EventType => GetType().AssemblyQualifiedName!;
 }
