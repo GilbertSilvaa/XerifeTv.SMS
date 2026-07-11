@@ -25,7 +25,6 @@ public sealed class IntegrationEventEnvelopeHandler : INotificationHandler<Integ
                 ?? throw new InvalidOperationException($"Integration event type '{eventEnvelope.EventName}' is not recognized.");
 
             var @event = (IntegrationEvent)JsonSerializer.Deserialize(eventEnvelope.Payload, integrationEventType)!;
-            @event.SetEventId(eventEnvelope.EventId);
 
             await _mediator.Publish(@event, cancellationToken);
         }
