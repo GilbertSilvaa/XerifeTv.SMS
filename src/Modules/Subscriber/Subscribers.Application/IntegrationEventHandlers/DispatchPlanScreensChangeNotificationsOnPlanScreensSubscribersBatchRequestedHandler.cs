@@ -9,15 +9,15 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribersBatchRequestedHandler
-    : BaseIntegrationEventHandler<PlanPriceNotificationBatchRequestedIntegrationEvent, Subscriber>
+internal sealed class DispatchPlanScreensChangeNotificationsOnPlanScreensSubscribersBatchRequestedHandler
+    : BaseIntegrationEventHandler<PlanScreensNotificationBatchRequestedIntegrationEvent, Subscriber>
 {
     private readonly int _batchSize;
 
     private readonly ISubscribersReadRepository _subscribersReadRepository;
     private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
-    public DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribersBatchRequestedHandler(
+    public DispatchPlanScreensChangeNotificationsOnPlanScreensSubscribersBatchRequestedHandler(
         ISubscribersReadRepository subscribersReadRepository,
         IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
         IInboxRepository<Subscriber> inboxRepository,
@@ -29,7 +29,7 @@ internal sealed class DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribers
         _integrationEventPublisher = integrationEventPublisher;
     }
 
-    public override async Task Execute(PlanPriceNotificationBatchRequestedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(PlanScreensNotificationBatchRequestedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         var subscribers = await _subscribersReadRepository.GetSubscribersByPlanIdAsync(
             notification.PlanId,
@@ -37,11 +37,11 @@ internal sealed class DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribers
 
         foreach (var subscriber in subscribers.Items)
         {
-            var subscriberNotificationEvent = new NotifySubscriberOfPlanPriceChangeIntegrationEvent(
+            var subscriberNotificationEvent = new NotifySubscriberOfPlanScreensChangeIntegrationEvent(
                 subscriber.Email,
                 subscriber.UserName,
                 notification.PlanName,
-                notification.NewPrice);
+                notification.NewMaxSimultaneousScreens);
 
             await _integrationEventPublisher.PublishAsync(
                 subscriberNotificationEvent,
@@ -51,11 +51,11 @@ internal sealed class DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribers
 
         if (subscribers.HasNext)
         {
-            var nextBatchEvent = new PlanPriceNotificationBatchRequestedIntegrationEvent(
+            var nextBatchEvent = new PlanScreensNotificationBatchRequestedIntegrationEvent(
                 notification.PlanId,
                 notification.PlanName,
-                notification.NewPrice,
-                (notification.PageSubscribersCursor ?? 1) + 1);
+                notification.NewMaxSimultaneousScreens,
+               (notification.PageSubscribersCursor ?? 1) + 1);
 
             await _integrationEventPublisher.PublishAsync(
                 nextBatchEvent,

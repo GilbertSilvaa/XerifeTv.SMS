@@ -9,12 +9,13 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class RequestSubscriberNotificationsOnPlanPriceAdjustedHandler : BaseIntegrationEventHandler<PlanPriceAdjustedIntegrationEvent, Subscriber>
+internal sealed class RequestSubscriberNotificationsOnPlanScreensAdjustedHandler
+    : BaseIntegrationEventHandler<PlanScreensAdjustedIntegrationEvent, Subscriber>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
     private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
-    public RequestSubscriberNotificationsOnPlanPriceAdjustedHandler(
+    public RequestSubscriberNotificationsOnPlanScreensAdjustedHandler(
         IPlanCatalogRepository planCatalogRepository,
         IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
         IInboxRepository<Subscriber> inboxRepository,
@@ -24,20 +25,20 @@ internal sealed class RequestSubscriberNotificationsOnPlanPriceAdjustedHandler :
         _integrationEventPublisher = integrationEventPublisher;
     }
 
-    public override async Task Execute(PlanPriceAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(PlanScreensAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
     {
         PlanItemCatalog? plan = await _planCatalogRepository.GetByIdAsync(notification.Id);
 
         if (plan == null) return;
 
-        var notifyPlanPriceUpdatedJob = new PlanPriceNotificationBatchRequestedIntegrationEvent(
+        var notifyPlanScreensUpdatedJob = new PlanScreensNotificationBatchRequestedIntegrationEvent(
             notification.Id,
             plan.Name,
-            notification.Price);
+            notification.NewMaxSimultaneousScreens);
 
         await _integrationEventPublisher.PublishAsync(
-            notifyPlanPriceUpdatedJob,
-            notifyPlanPriceUpdatedJob.EventName,
+            notifyPlanScreensUpdatedJob,
+            notifyPlanScreensUpdatedJob.EventName,
             cancellationToken);
     }
 }

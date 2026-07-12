@@ -3,10 +3,10 @@ using SharedKernel;
 
 namespace BuildingBlocks.IntegrationEvents.Subscribers;
 
-[EventMetadata("notifyplanssubscribersbatchrequested", 1.0)]
-public record NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent(
+[EventMetadata("notify.plan.price.subscribers.batch.requested", 1.0)]
+public record PlanPriceNotificationBatchRequestedIntegrationEvent(
         Guid PlanId,
         string PlanName,
         Money NewPrice,
         int? PageSubscribersCursor = null)
-    : IntegrationEvent("notifyplanssubscribersbatchrequested", 1.0);
+    : IntegrationEvent("notify.plan.price.subscribers.batch.requested", 1.0);
