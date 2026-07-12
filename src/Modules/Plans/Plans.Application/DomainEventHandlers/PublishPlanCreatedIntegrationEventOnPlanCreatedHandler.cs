@@ -6,11 +6,11 @@ using Plans.Domain.Events;
 
 namespace Plans.Application.DomainEventHandlers;
 
-public sealed class PlanCreatedEventHandler : IDomainEventHandler<PlanCreatedDomainEvent>
+public sealed class PublishPlanCreatedIntegrationEventOnPlanCreatedHandler : IDomainEventHandler<PlanCreatedDomainEvent>
 {
     private readonly IIntegrationEventPublisher<Plan> _publisher;
 
-    public PlanCreatedEventHandler(IIntegrationEventPublisher<Plan> publisher)
+    public PublishPlanCreatedIntegrationEventOnPlanCreatedHandler(IIntegrationEventPublisher<Plan> publisher)
     {
         _publisher = publisher;
     }

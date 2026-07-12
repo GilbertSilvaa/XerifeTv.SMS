@@ -9,7 +9,7 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class NotifyPlanPriceSubscribersBatchRequestedIntegrationEventHandler
+internal sealed class DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribersBatchRequestedHandler
     : BaseIntegrationEventHandler<NotifyPlanPriceSubscribersBatchRequestedIntegrationEvent, Subscriber>
 {
     private readonly int _batchSize;
@@ -17,7 +17,7 @@ internal sealed class NotifyPlanPriceSubscribersBatchRequestedIntegrationEventHa
     private readonly ISubscribersReadRepository _subscribersReadRepository;
     private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
-    public NotifyPlanPriceSubscribersBatchRequestedIntegrationEventHandler(
+    public DispatchPlanPriceChangeNotificationsOnPlanPriceSubscribersBatchRequestedHandler(
         ISubscribersReadRepository subscribersReadRepository,
         IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
         IInboxRepository<Subscriber> inboxRepository,

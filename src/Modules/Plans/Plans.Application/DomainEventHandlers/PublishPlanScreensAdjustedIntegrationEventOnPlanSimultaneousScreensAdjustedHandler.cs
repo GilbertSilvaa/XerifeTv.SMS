@@ -6,11 +6,12 @@ using Plans.Domain.Events;
 
 namespace Plans.Application.DomainEventHandlers;
 
-internal sealed class PlanSimultaneousScreensAdjustedEventHandler : IDomainEventHandler<PlanSimultaneousScreensAjustedDomainEvent>
+internal sealed class PublishPlanScreensAdjustedIntegrationEventOnPlanSimultaneousScreensAdjustedHandler 
+	: IDomainEventHandler<PlanSimultaneousScreensAjustedDomainEvent>
 {
 	private readonly IIntegrationEventPublisher<Plan> _publisher;
 
-	public PlanSimultaneousScreensAdjustedEventHandler(IIntegrationEventPublisher<Plan> publisher)
+	public PublishPlanScreensAdjustedIntegrationEventOnPlanSimultaneousScreensAdjustedHandler(IIntegrationEventPublisher<Plan> publisher)
 	{
 		_publisher = publisher;
 	}

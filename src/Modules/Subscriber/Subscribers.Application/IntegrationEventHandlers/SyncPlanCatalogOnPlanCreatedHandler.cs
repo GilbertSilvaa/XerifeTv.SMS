@@ -7,11 +7,11 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class PlanCreatedIntegrationEventHandler : BaseIntegrationEventHandler<PlanCreatedIntegrationEvent, Subscriber>
+internal sealed class SyncPlanCatalogOnPlanCreatedHandler : BaseIntegrationEventHandler<PlanCreatedIntegrationEvent, Subscriber>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
 
-    public PlanCreatedIntegrationEventHandler(
+    public SyncPlanCatalogOnPlanCreatedHandler(
         IPlanCatalogRepository planCatalogRepository,
         IInboxRepository<Subscriber> inboxRepository,
         IUnitOfWork<Subscriber> unitOfWork) : base(inboxRepository, unitOfWork)

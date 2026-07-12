@@ -9,12 +9,12 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Application.IntegrationEventHandlers;
 
-internal sealed class SubscriberCreatedFailedIntegrationEventHandler : BaseIntegrationEventHandler<SubscriberCreationFailedIntegrationEvent, UserIdentityAggregateRoot>
+internal sealed class RollbackIdentityUserOnSubscriberCreationFailedHandler : BaseIntegrationEventHandler<SubscriberCreationFailedIntegrationEvent, UserIdentityAggregateRoot>
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly IIntegrationEventPublisher<UserIdentityAggregateRoot> _integrationEventPublisher;
 
-    public SubscriberCreatedFailedIntegrationEventHandler(
+    public RollbackIdentityUserOnSubscriberCreationFailedHandler(
         UserManager<IdentityUser> userManager,
         IIntegrationEventPublisher<UserIdentityAggregateRoot> integrationEventPublisher,
         IInboxRepository<UserIdentityAggregateRoot> inboxRepository,

@@ -9,12 +9,12 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class UpdatePlanCatalogOnPlanPriceAdjustedHandler
+internal sealed class SyncPlanCatalogOnPlanPriceAdjustedHandler
     : BaseIntegrationEventHandler<PlanPriceAdjustedIntegrationEvent, Subscriber>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
 
-    public UpdatePlanCatalogOnPlanPriceAdjustedHandler(
+    public SyncPlanCatalogOnPlanPriceAdjustedHandler(
         IPlanCatalogRepository planCatalogRepository,
         IInboxRepository<Subscriber> inboxRepository,
         IUnitOfWork<Subscriber> unitOfWork) : base(inboxRepository, unitOfWork)

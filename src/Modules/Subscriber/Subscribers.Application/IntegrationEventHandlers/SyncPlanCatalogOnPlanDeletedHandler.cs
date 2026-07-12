@@ -7,11 +7,11 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class PlanScreensAdjustedIntegrationEventHandler : BaseIntegrationEventHandler<PlanScreensAdjustedIntegrationEvent, Subscriber>
+internal sealed class SyncPlanCatalogOnPlanDeletedHandler : BaseIntegrationEventHandler<PlanDeletedIntegrationEvent, Subscriber>
 {
     private readonly IPlanCatalogRepository _planCatalogRepository;
 
-    public PlanScreensAdjustedIntegrationEventHandler(
+    public SyncPlanCatalogOnPlanDeletedHandler(
         IPlanCatalogRepository planCatalogRepository,
         IInboxRepository<Subscriber> inboxRepository,
         IUnitOfWork<Subscriber> unitOfWork) : base(inboxRepository, unitOfWork)
@@ -19,13 +19,8 @@ internal sealed class PlanScreensAdjustedIntegrationEventHandler : BaseIntegrati
         _planCatalogRepository = planCatalogRepository;
     }
 
-    public override async Task Execute(PlanScreensAdjustedIntegrationEvent notification, CancellationToken cancellationToken)
+    public override async Task Execute(PlanDeletedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        PlanItemCatalog? plan = await _planCatalogRepository.GetByIdAsync(notification.Id);
-
-        if (plan == null) return;
-
-        plan.Update(plan.Name, notification.NewMaxSimultaneousScreens, plan.Price);
-        await _planCatalogRepository.AddOrUpdateAsync(plan);
+        await _planCatalogRepository.RemoveAsync(notification.Id);
     }
 }

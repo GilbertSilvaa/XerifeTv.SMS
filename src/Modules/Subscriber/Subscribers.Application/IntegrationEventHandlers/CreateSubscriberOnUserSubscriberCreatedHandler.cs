@@ -10,12 +10,12 @@ using Subscribers.Domain.Entities;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
-internal sealed class UserSubscriberCreatedIntegrationEventHandler : BaseIntegrationEventHandler<UserSubscriberCreatedIntegrationEvent, Subscriber>
+internal sealed class CreateSubscriberOnUserSubscriberCreatedHandler : BaseIntegrationEventHandler<UserSubscriberCreatedIntegrationEvent, Subscriber>
 {
     private readonly IMediator _mediator;
     private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
-    public UserSubscriberCreatedIntegrationEventHandler(
+    public CreateSubscriberOnUserSubscriberCreatedHandler(
         IMediator mediator,
         IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
         IInboxRepository<Subscriber> inboxRepository,

@@ -6,11 +6,11 @@ using Subscribers.Domain.Events;
 
 namespace Subscribers.Application.DomainEventHandlers;
 
-internal sealed class SubscriberCreatedEventHandler : IDomainEventHandler<SubscriberCreatedDomainEvent>
+internal sealed class PublishSubscriberCreatedIntegrationEventOnSubscriberCreatedHandler : IDomainEventHandler<SubscriberCreatedDomainEvent>
 {
     private readonly IIntegrationEventPublisher<Subscriber> _publisher;
 
-    public SubscriberCreatedEventHandler(IIntegrationEventPublisher<Subscriber> publisher)
+    public PublishSubscriberCreatedIntegrationEventOnSubscriberCreatedHandler(IIntegrationEventPublisher<Subscriber> publisher)
     {
         _publisher = publisher;
     }
