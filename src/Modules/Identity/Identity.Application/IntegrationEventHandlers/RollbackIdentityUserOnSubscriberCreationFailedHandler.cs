@@ -26,7 +26,7 @@ internal sealed class RollbackIdentityUserOnSubscriberCreationFailedHandler : Ba
 
     public override async Task Execute(SubscriberCreationFailedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByEmailAsync(notification.Email);
+        var user = await _userManager.FindByIdAsync(notification.IdentityUserId.ToString());
 
         if (user != null)
         {

@@ -32,8 +32,8 @@ internal sealed class CreateSubscriberOnUserSubscriberCreatedHandler : BaseInteg
 
         if (result.IsFailure)
         {
-            string errorMessage = $"UserSubscriberCreatedIntegrationEventHandler.Error: {result.Error.Description}";
-            SubscriberCreationFailedIntegrationEvent integrationEvent = new(notification.Email, notification.UserName, errorMessage);
+            string errorMessage = $"CreateSubscriberOnUserSubscriberCreatedHandler.Error: {result.Error.Description}";
+            SubscriberCreationFailedIntegrationEvent integrationEvent = new(notification.IdentityUserId, notification.Email, notification.UserName, errorMessage);
             await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
         }
     }
