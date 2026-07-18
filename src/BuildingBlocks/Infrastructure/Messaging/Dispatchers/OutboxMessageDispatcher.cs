@@ -42,7 +42,7 @@ public sealed class OutboxMessageDispatcher<TAggregateRoot> : IOutboxMessageDisp
                         await _messageBus.PublishAsync(
                                             message: message.Payload,
                                             topic: MessagingConstants.INTEGRATION_EVENTS_TOPIC,
-                                            key: message.RoutingKey,
+                                            key: $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.{message.RoutingKey}",
                                             cancellationToken);
 
                         message.MarkAsCompleted();
