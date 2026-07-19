@@ -21,16 +21,16 @@ public sealed class WolverineRabbitMQMessageBus : ICoreMessageBus
         _factory = factory;
     }
 
-    public async Task PublishAsync(string message, string topic, string? key = null, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(string message, string topic, string key, CancellationToken cancellationToken = default)
     {
         using var scope = _factory.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IWolverineBus>();
 
         var integrationEventEnvelope = JsonSerializer.Deserialize<IntegrationEventEnvelope>(message);
 
-        await bus.BroadcastToTopicAsync(key!, integrationEventEnvelope!, new DeliveryOptions
+        await bus.BroadcastToTopicAsync(key, integrationEventEnvelope!, new DeliveryOptions
         {
-            Headers = { ["topic"] = topic, ["key"] = key ?? string.Empty },  
+            Headers = { ["topic"] = topic, ["key"] = key ?? string.Empty },
         });
     }
 
@@ -55,22 +55,11 @@ public static class WolverineRabbitMQMessageBusExtensions
                 rabbit.UserName = configuration.UserName;
                 rabbit.Password = configuration.Password;
                 rabbit.VirtualHost = configuration.VirtualHost;
-            })
-            .CustomizeDeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"))
+            })  
             .AutoProvision();
 
             opts.PublishAllMessages()
-                .ToRabbitTopics(MessagingConstants.INTEGRATION_EVENTS_TOPIC, exchange =>
-                {
-                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.identity.#")
-                            .ToQueue($"identity.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
-
-                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.plan.#")
-                            .ToQueue($"plan.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
-
-                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.subscriber.#")
-                            .ToQueue($"subscriber.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
-                });
+                .ToRabbitTopics(MessagingConstants.INTEGRATION_EVENTS_TOPIC);
         });
     }
 
@@ -94,11 +83,22 @@ public static class WolverineRabbitMQMessageBusExtensions
             .DeclareExchange(MessagingConstants.INTEGRATION_EVENTS_TOPIC, ex =>
             {
                 ex.ExchangeType = ExchangeType.Topic;
-                ex.BindQueue($"identity.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}", $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.identity.#");
-                ex.BindQueue($"plan.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}", $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.plan.#");
-                ex.BindQueue($"subscriber.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}", $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.subscriber.#");
             })
+            .CustomizeDeadLetterQueueing(new($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.dead"))
             .AutoProvision();
+
+            opts.PublishAllMessages()
+                .ToRabbitTopics(MessagingConstants.INTEGRATION_EVENTS_TOPIC, exchange =>
+                {
+                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.identity.#")
+                            .ToQueue($"identity.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
+
+                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.plan.#")
+                            .ToQueue($"plan.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
+
+                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.subscriber.#")
+                            .ToQueue($"subscriber.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
+                });
 
             opts.ListenToRabbitQueue($"identity.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}")
                 .PreFetchCount((ushort)MessagingConstants.MAX_MESSAGES_PER_BATCH)

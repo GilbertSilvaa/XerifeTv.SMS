@@ -1,7 +1,6 @@
-﻿using BuildingBlocks.Core.Events;
+﻿using BuildingBlocks.Common;
+using BuildingBlocks.Core.Events;
 using BuildingBlocks.Core.Messaging;
-using BuildingBlocks.Core.Messaging.Inbox;
-using BuildingBlocks.Infrastructure.Exceptions;
 using BuildingBlocks.Infrastructure.Messaging.Buses.RabbitMQ;
 using BuildingBlocks.Integration.Tests.Fakes;
 using BuildingBlocks.Integration.Tests.Infrastructure.Fixtures;
@@ -18,6 +17,8 @@ namespace BuildingBlocks.Integration.Tests.Infrastructure;
 [Collection("RabbitMq")]
 public sealed class BusRabbitMqTests : IAsyncLifetime
 {
+    private static readonly string RoutingKey = $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.identity.test";
+
     private readonly RabbitMqFixture _fixture;
     private readonly TaskCompletionSource<IntegrationEventEnvelope> _messageReceived;
 
@@ -85,7 +86,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
 
         // Act
         var act = async () =>
-            await _messageBus.PublishAsync(message, topic: integrationEvent.EventType);
+            await _messageBus.PublishAsync(message, topic: integrationEvent.EventType, key: RoutingKey);
 
         // Assert
         await act.Should().NotThrowAsync();
@@ -99,7 +100,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
 
         // Act
         var act = async () =>
-            await _messageBus.PublishAsync(invalidMessage, topic: "fake.test");
+            await _messageBus.PublishAsync(invalidMessage, topic: "fake.test", key: RoutingKey);
 
         // Assert
         await act.Should().ThrowAsync<Exception>();
@@ -114,7 +115,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
         var message = JsonSerializer.Serialize(envelope);
 
         // Act
-        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType);
+        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType, key: RoutingKey);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         var received = await _messageReceived.Task.WaitAsync(cts.Token);
@@ -133,7 +134,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
         var message = JsonSerializer.Serialize(envelope);
 
         // Act
-        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType);
+        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType, key: RoutingKey);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await _messageReceived.Task.WaitAsync(cts.Token);
@@ -162,7 +163,7 @@ public sealed class BusRabbitMqTests : IAsyncLifetime
         var message = JsonSerializer.Serialize(envelope);
 
         // Act
-        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType);
+        await _messageBus.PublishAsync(message, topic: integrationEvent.EventType, key: RoutingKey);
         await Task.Delay(TimeSpan.FromSeconds(15));
 
         // Assert

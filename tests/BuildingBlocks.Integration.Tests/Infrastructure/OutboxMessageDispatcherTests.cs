@@ -68,7 +68,7 @@ public class OutboxMessageDispatcherTests
             x => x.PublishAsync(
                 message.Payload,
                 MessagingConstants.INTEGRATION_EVENTS_TOPIC,
-                message.RoutingKey,
+                $"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.{message.RoutingKey}",
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
