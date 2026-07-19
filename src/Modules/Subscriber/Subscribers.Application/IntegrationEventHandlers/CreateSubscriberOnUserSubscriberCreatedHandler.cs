@@ -4,35 +4,37 @@ using BuildingBlocks.Core.Messaging.Inbox;
 using BuildingBlocks.Infrastructure;
 using BuildingBlocks.IntegrationEvents.Identity;
 using BuildingBlocks.IntegrationEvents.Subscribers;
-using MediatR;
-using Subscribers.Application.Commands.CreateSubscriber;
+using SharedKernel.Exceptions;
 using Subscribers.Domain.Entities;
+using Subscribers.Domain.Repositories;
 
 namespace Subscribers.Application.IntegrationEventHandlers;
 
 internal sealed class CreateSubscriberOnUserSubscriberCreatedHandler : BaseIntegrationEventHandler<UserSubscriberCreatedIntegrationEvent, Subscriber>
 {
-    private readonly IMediator _mediator;
+    private readonly ISubscribersRepository _repository;
     private readonly IIntegrationEventPublisher<Subscriber> _integrationEventPublisher;
 
     public CreateSubscriberOnUserSubscriberCreatedHandler(
-        IMediator mediator,
+        ISubscribersRepository repository,
         IIntegrationEventPublisher<Subscriber> integrationEventPublisher,
         IInboxRepository<Subscriber> inboxRepository,
         IUnitOfWork<Subscriber> unitOfWork) : base(inboxRepository, unitOfWork)
     {
-        _mediator = mediator;
+        _repository = repository;
         _integrationEventPublisher = integrationEventPublisher;
     }
 
     public override async Task Execute(UserSubscriberCreatedIntegrationEvent notification, CancellationToken cancellationToken)
     {
-        var command = new CreateSubscriberCommand(notification.UserName, notification.Email, notification.IdentityUserId);
-        var result = await _mediator.Send(command, cancellationToken);
-
-        if (result.IsFailure)
+        try
         {
-            string errorMessage = $"CreateSubscriberOnUserSubscriberCreatedHandler.Error: {result.Error.Description}";
+            var subscriber = Subscriber.Create(notification.UserName, notification.Email, notification.IdentityUserId);
+            await _repository.AddOrUpdateAsync(subscriber);
+        }
+        catch (DomainException ex)
+        {
+            string errorMessage = $"CreateSubscriberOnUserSubscriberCreatedHandler.Error: {ex.Message}";
             SubscriberCreationFailedIntegrationEvent integrationEvent = new(notification.IdentityUserId, notification.Email, notification.UserName, errorMessage);
             await _integrationEventPublisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
         }
