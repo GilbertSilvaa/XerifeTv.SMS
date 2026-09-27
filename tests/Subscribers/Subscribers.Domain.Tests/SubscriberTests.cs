@@ -78,7 +78,7 @@ public class SubscriberTests
         string username = "username_test";
         string email = "email@example.com";
         Guid identityUserId = Guid.TryParse(identityUserIdStr, out var parsedIdentityUserId) ? parsedIdentityUserId : Guid.Empty;
-        
+
         // Act
         Action act = () => Subscriber.Create(username, email, identityUserId);
 
@@ -102,9 +102,10 @@ public class SubscriberTests
 
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email, identityUserId);
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
         // Act
-        subscriber.AddSignature(plan);
+        subscriber.AddSignature(plan, paymentMethod);
 
         // Assert
         subscriber.Signatures.Should().ContainSingle(s => s.Plan.PlanId == planId);
@@ -129,9 +130,10 @@ public class SubscriberTests
 
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
         var subscriber = Subscriber.Create(username, email, identityUserId);
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
         // Act
-        Action act = () => subscriber.AddSignature(plan);
+        Action act = () => subscriber.AddSignature(plan, paymentMethod);
 
         // Assert
         act.Should().Throw<ValidationException>()
@@ -156,11 +158,13 @@ public class SubscriberTests
         var plan1 = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
         var plan2 = new PlanSnapshot(Guid.NewGuid(), "Another Plan", 2, Money.From(4.99m, "USD"));
 
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
+
         // Act
         Action act = () =>
         {
-            subscriber.AddSignature(plan1);
-            subscriber.AddSignature(plan2);
+            subscriber.AddSignature(plan1, paymentMethod);
+            subscriber.AddSignature(plan2, paymentMethod);
         };
 
         // Assert
@@ -184,7 +188,8 @@ public class SubscriberTests
         var plan = new PlanSnapshot(planId, planName, planMaxSimultaneousScreens, planPrice);
 
         var subscriber = Subscriber.Create(username, email, identityUserId);
-        subscriber.AddSignature(plan);
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
+        subscriber.AddSignature(plan, paymentMethod);
 
         // Act
         subscriber.CancelSignature();

@@ -10,6 +10,7 @@ public sealed class Signature : Entity
     private const int RENEWAL_PERIOD_IN_DAYS = 30;
 
     public PlanSnapshot Plan { get; private set; } = default!;
+    public PaymentMethod PaymentMethod { get; private set; } = default!;
     public Guid SubscriberId { get; private set; }
     public ESignatureStatus Status { get; private set; }
     public DateTime? StartDate { get; private set; }
@@ -18,16 +19,17 @@ public sealed class Signature : Entity
 
     private Signature() { }
 
-    private Signature(PlanSnapshot plan, Guid subscriberId)
+    private Signature(PlanSnapshot plan, PaymentMethod paymentMethod, Guid subscriberId)
     {
         Plan = plan;
+        PaymentMethod = paymentMethod;
         SubscriberId = subscriberId;
         Status = ESignatureStatus.PENDING_PAYMENT;
     }
 
-    public static Signature Create(PlanSnapshot plan, Guid subscriberId)
+    public static Signature Create(PlanSnapshot plan, PaymentMethod paymentMethod, Guid subscriberId)
     {
-        var signature = new Signature(plan, subscriberId);
+        var signature = new Signature(plan, paymentMethod, subscriberId);
         return signature;
     }
 
@@ -50,6 +52,14 @@ public sealed class Signature : Entity
             throw new CannotUpdateRenewalDateSignatureException(Id, Status);
 
         RenewalDate = RenewalDate?.AddDays(RENEWAL_PERIOD_IN_DAYS);
+    }
+
+    public void UpdatePaymentMethod(PaymentMethod paymentMethod)
+    {
+        if (Status == ESignatureStatus.CANCELLED)
+            throw new CannotUpdatePaymentMethodSignatureException(Id, Status);
+
+        PaymentMethod = paymentMethod;
     }
 
     public void Cancel()

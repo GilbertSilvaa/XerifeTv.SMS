@@ -141,7 +141,7 @@ public static class SubscribersEndpointExtension
             if (!Guid.TryParse(identityUserIdStr, out Guid identityUserId))
                 return Results.Unauthorized();
 
-            var command = new AddSignatureCommand(identityUserId, request.PlanId);
+            var command = new AddSignatureCommand(identityUserId, request.PlanId, request.PaymentMethod);
             var response = await mediator.Send(command);
 
             if (response.IsFailure)

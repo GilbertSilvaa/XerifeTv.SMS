@@ -37,7 +37,7 @@ internal sealed class AddSignatureCommandHandler : ICommandHandler<AddSignatureC
             if (plan == null)
                 return Result.Failure(new Error("AddSignature.PlanNotFound", "Plan not found."));
 
-            subscriber.AddSignature(plan.ToPlanSnapshot());
+            subscriber.AddSignature(plan.ToPlanSnapshot(), request.PaymentMethod);
 
             await _subscriberRepository.AddOrUpdateAsync(subscriber);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

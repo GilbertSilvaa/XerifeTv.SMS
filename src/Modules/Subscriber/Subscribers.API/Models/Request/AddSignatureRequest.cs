@@ -1,3 +1,5 @@
-﻿namespace Subscribers.API.Models.Request;
+﻿using Subscribers.Domain.ValueObjects;
 
-public sealed record AddSignatureRequest(Guid PlanId);
+namespace Subscribers.API.Models.Request;
+
+public sealed record AddSignatureRequest(Guid PlanId, PaymentMethod PaymentMethod);

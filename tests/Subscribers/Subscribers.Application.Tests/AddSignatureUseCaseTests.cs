@@ -7,6 +7,8 @@ using Subscribers.Domain.Repositories;
 using Xunit;
 using FluentAssertions;
 using Subscribers.Application.PlanCatalog;
+using Subscribers.Domain.ValueObjects;
+using Subscribers.Domain.Enums;
 
 namespace Subscribers.Application.Tests;
 
@@ -36,8 +38,9 @@ public class AddSignatureUseCaseTests
         // Arrange
         Guid identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
-        var command = new AddSignatureCommand(identityUserId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId, paymentMethod);
 
         var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
         _planCatalogRepositoryMock
@@ -69,8 +72,9 @@ public class AddSignatureUseCaseTests
         // Arrange
         Guid identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
-        var command = new AddSignatureCommand(identityUserId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId, paymentMethod);
 
         _subscriberRepositoryMock
             .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
@@ -93,8 +97,9 @@ public class AddSignatureUseCaseTests
         // Arrange
         var identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
-        var command = new AddSignatureCommand(identityUserId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId, paymentMethod);
 
         var subscriber = Subscriber.Create("subscriber_test", "email@xample.com", identityUserId);
 
@@ -123,8 +128,9 @@ public class AddSignatureUseCaseTests
         // Arrange
         var identityUserId = Guid.NewGuid();
         var planId = Guid.NewGuid();
+        var paymentMethod = new PaymentMethod(EPaymentMethodType.PIX);
 
-        var command = new AddSignatureCommand(identityUserId, planId);
+        var command = new AddSignatureCommand(identityUserId, planId, paymentMethod);
 
         var planItem = new PlanItemCatalog(planId, "Test Plan", 6, Money.From(9.99m, "USD"));
 
@@ -133,7 +139,7 @@ public class AddSignatureUseCaseTests
             .ReturnsAsync(planItem);
 
         var subscriberMock = Subscriber.Create("subscriber_test", "email@xample.com", identityUserId);
-        subscriberMock.AddSignature(planItem.ToPlanSnapshot());
+        subscriberMock.AddSignature(planItem.ToPlanSnapshot(), paymentMethod);
 
         _subscriberRepositoryMock
             .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
