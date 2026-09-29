@@ -8,7 +8,7 @@ using Subscribers.Domain.Repositories;
 
 namespace Subscribers.Application.Commands.AddCreditCard;
 
-internal sealed class AddCreditCardCommandHandler : ICommandHandler<AddCreditCardCommand, Result>
+internal sealed class AddCreditCardCommandHandler : ICommandHandler<AddCreditCardCommand, Result<CheckoutCardUrl>>
 {
     private readonly ISubscribersRepository _subscriberRepository;
     private readonly ICreditCardGateway _creditCardGateway;
@@ -25,48 +25,32 @@ internal sealed class AddCreditCardCommandHandler : ICommandHandler<AddCreditCar
     }
 
 
-    public async Task<Result> Handle(AddCreditCardCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CheckoutCardUrl>> Handle(AddCreditCardCommand request, CancellationToken cancellationToken)
     {
         try
         {
             var subscriber = await _subscriberRepository.GetByIdentityUserIdAsync(request.IdentityUserId);
 
             if (subscriber == null)
-                return Result.Failure(new Error("AddSignature.SubscriberNotFound", "Subscriber not found."));
+                return Result<CheckoutCardUrl>.Failure(new Error("AddSignature.SubscriberNotFound", "Subscriber not found."));
 
-            var validateCreditCardResult = await _creditCardGateway.ValidateAsync(new CreditCardValidationRequest
-            {
-                CardholderName = request.CardholderName,
-                BillingAddress = request.BillingAddress,
-                CardNumber = request.CardNumber,
-                Cvv = request.Cvv,
-                ExpirationMonth = request.ExpirationMonth,
-                ExpirationYear = request.ExpirationYear,
-                HolderDocument = request.HolderDocument,
-                GatewayCustomerId = subscriber.GatewayCustomerId
-            }, cancellationToken);
+            var creditCardSetupResult = await _creditCardGateway.InitiateCardSetupAsync(
+                new InitiateCardSetupRequest(subscriber.GatewayCustomerId),
+                cancellationToken);
 
-            if (validateCreditCardResult.IsFailure || validateCreditCardResult.Data == null)
-                return Result.Failure(validateCreditCardResult.Error);
+            if (creditCardSetupResult.IsFailure || creditCardSetupResult.Data == null)
+                return Result<CheckoutCardUrl>.Failure(creditCardSetupResult.Error);
 
-            var creditCard = new CreditCard(
-                validateCreditCardResult.Data.Brand,
-                validateCreditCardResult.Data.Last4Digits,
-                validateCreditCardResult.Data.ExpiryMonth,
-                validateCreditCardResult.Data.ExpiryYear,
-                validateCreditCardResult.Data.GatewayToken);
-
-            subscriber.AddCreditCard(creditCard);
-            subscriber.SetGatewayCustomerId(validateCreditCardResult.Data.GatewayCustomerId);
+            subscriber.SetGatewayCustomerId(creditCardSetupResult.Data.GatewayCustomerId);
 
             await _subscriberRepository.AddOrUpdateAsync(subscriber);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+            return Result<CheckoutCardUrl>.Success(new CheckoutCardUrl(creditCardSetupResult.Data.CheckoutUrl));
         }
         catch (DomainException ex)
         {
-            return Result.Failure(new Error(ex.Code, ex.Message));
+            return Result<CheckoutCardUrl>.Failure(new Error(ex.Code, ex.Message));
         }
     }
 }

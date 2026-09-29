@@ -5,20 +5,19 @@ using SharedKernel;
 using Subscribers.Application.Abstractions;
 using Subscribers.Application.Commands.AddCreditCard;
 using Subscribers.Domain.Entities;
-using Subscribers.Domain.Enums;
 using Subscribers.Domain.Repositories;
 using Xunit;
 
 namespace Subscribers.Application.Tests;
 
-public class AddCreditCardUseCaseTests
+public class AddCreditCardCommandHandlerTests
 {
     private readonly Mock<ISubscribersRepository> _subscriberRepositoryMock;
     private readonly Mock<IUnitOfWork<Subscriber>> _unitOfWorkMock;
     private readonly Mock<ICreditCardGateway> _creditCardGatewayMock;
     private readonly AddCreditCardCommandHandler _handler;
 
-    public AddCreditCardUseCaseTests()
+    public AddCreditCardCommandHandlerTests()
     {
         _subscriberRepositoryMock = new Mock<ISubscribersRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork<Subscriber>>();
@@ -27,45 +26,32 @@ public class AddCreditCardUseCaseTests
         _handler = new AddCreditCardCommandHandler(
             _subscriberRepositoryMock.Object,
             _creditCardGatewayMock.Object,
-            _unitOfWorkMock.Object
-        );
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
-    public async Task Should_ReturnSucess_When_AddingCreditCardValidatedByThePaymentGateway()
+    public async Task Should_ReturnCheckoutUrl_When_GatewayInitiatesCardSetupSuccessfully()
     {
         // Arrange
-        Guid identityUserId = Guid.NewGuid();
-        var command = new AddCreditCardCommand(
-            identityUserId,
-            CardholderName: "John Doe",
-            CardNumber: "4111111111111111",
-            ExpirationMonth: 12,
-            ExpirationYear: DateTime.UtcNow.Year + 2,
-            Cvv: "123",
-            HolderDocument: "999.999.999.-99",
-            BillingAddress: CreateValidAddress()
-        );
+        var identityUserId = Guid.NewGuid();
+        var command = new AddCreditCardCommand(identityUserId);
 
-        var subscriberMock = Subscriber.Create("subscriber_test", "email@example.com", identityUserId);
+        var subscriber = Subscriber.Create("subscriber_test", "email@example.com", identityUserId);
 
         _subscriberRepositoryMock
             .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
-            .ReturnsAsync(subscriberMock);
+            .ReturnsAsync(subscriber);
 
-        var creditCardResult = new CreditCardValidationResponse(
-            GatewayToken: Guid.CreateVersion7().ToString(),
-            Last4Digits: "1111",
-            Brand: ECardBrand.ELO,
-            ExpiryMonth: 12,
-            ExpiryYear: 2028,
+        var cardSetupResponse = new InitiateCardSetupResponse(
+            CheckoutUrl: "https://teste.io",
+            SessionId: Guid.NewGuid().ToString(),
             GatewayCustomerId: Guid.NewGuid().ToString());
 
         _creditCardGatewayMock
-            .Setup(s => s.ValidateAsync(
-                It.IsAny<CreditCardValidationRequest>(),
+            .Setup(g => g.InitiateCardSetupAsync(
+                It.IsAny<InitiateCardSetupRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<CreditCardValidationResponse>.Success(creditCardResult));
+            .ReturnsAsync(Result<InitiateCardSetupResponse>.Success(cardSetupResponse));
 
         _unitOfWorkMock
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -78,41 +64,31 @@ public class AddCreditCardUseCaseTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.IsFailure.Should().BeFalse();
-        subscriberMock.GatewayCustomerId.Should().NotBeNullOrEmpty();
+        result.Data?.Url.Should().Be(cardSetupResponse.CheckoutUrl);
+        subscriber.GatewayCustomerId.Should().Be(cardSetupResponse.GatewayCustomerId);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Should_ReturnFailure_When_AddingCreditCardNotValidatedByTheCreditCardGateway()
+    public async Task Should_ReturnFailure_When_GatewayFailsToInitiateCardSetup()
     {
         // Arrange
-        Guid identityUserId = Guid.NewGuid();
-        var command = new AddCreditCardCommand(
-            identityUserId,
-            CardholderName: "John Doe",
-            CardNumber: "4111111111111111",
-            ExpirationMonth: 12,
-            ExpirationYear: DateTime.UtcNow.Year + 2,
-            Cvv: "123",
-            HolderDocument: "999.999.999.-99",
-            BillingAddress: CreateValidAddress()
-        );
+        var identityUserId = Guid.NewGuid();
+        var command = new AddCreditCardCommand(identityUserId);
 
-        var subscriberMock = Subscriber.Create("subscriber_test", "email@example.com", identityUserId);
+        var subscriber = Subscriber.Create("subscriber_test", "email@example.com", identityUserId);
 
         _subscriberRepositoryMock
             .Setup(r => r.GetByIdentityUserIdAsync(identityUserId))
-            .ReturnsAsync(subscriberMock);
+            .ReturnsAsync(subscriber);
+
+        var gatewayError = new Error("CreditCardGateway.ValidationFailed");
 
         _creditCardGatewayMock
-            .Setup(s => s.ValidateAsync(
-                It.IsAny<CreditCardValidationRequest>(),
+            .Setup(g => g.InitiateCardSetupAsync(
+                It.IsAny<InitiateCardSetupRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<CreditCardValidationResponse>.Failure(new Error("CreditCardGateway.ValidationFailed")));
-
-        _unitOfWorkMock
-            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask)
-            .Verifiable();
+            .ReturnsAsync(Result<InitiateCardSetupResponse>.Failure(gatewayError));
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -120,16 +96,8 @@ public class AddCreditCardUseCaseTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("CreditCardGateway.ValidationFailed");
+        result.Error.Code.Should().Be(gatewayError.Code);
+        subscriber.GatewayCustomerId.Should().BeNullOrEmpty();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    private static Address CreateValidAddress() =>
-        Address.Create(
-            street: "Av. Paulista",
-            number: "1000",
-            neighborhood: "Bela Vista",
-            zipCode: "01310100",
-            city: "São Paulo",
-            state: "SP",
-            country: "BR");
 }
