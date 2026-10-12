@@ -12,13 +12,9 @@ public sealed class Subscriber : AggregateRoot
     public string UserName { get; private set; } = default!;
     public string Email { get; private set; } = default!;
     public Guid IdentityUserId { get; private set; }
-    public string? GatewayCustomerId { get; private set; }
 
     private readonly List<Signature> _signatures = [];
     public IReadOnlyList<Signature> Signatures => _signatures;
-
-    private readonly List<CreditCard> _creditCards = [];
-    public IReadOnlyList<CreditCard> CreditCards => [.. _creditCards.Where(cc => !cc.IsDeleted)];
 
     public Signature? ActiveSignature => _signatures
         .Where(s => s.IsActiveOrPending())
@@ -72,9 +68,6 @@ public sealed class Subscriber : AggregateRoot
         if (Signatures.Where(s => s.IsActiveOrPending()).Any())
             throw new ActiveSignatureExistsException();
 
-        if (paymentMethod.CreditCardId != null && !CreditCards.Any(cc => cc.Id == paymentMethod.CreditCardId))
-            throw new ValidationException("Credit card not found.");
-
         var signature = Signature.Create(plan, paymentMethod, subscriberId: Id);
 
         _signatures.Add(signature);
@@ -100,51 +93,10 @@ public sealed class Subscriber : AggregateRoot
             signatureActiveOrPending.EndDate ?? default));
     }
 
-    public void SetGatewayCustomerId(string gatewayCustomerId)
-    {
-        if (string.IsNullOrWhiteSpace(gatewayCustomerId))
-            throw new ValidationException("The gateway customer ID provided is invalid.");
-
-        GatewayCustomerId = gatewayCustomerId;
-    }
-
-    public void AddCreditCard(CreditCard creditCard)
-    {
-        if (creditCard == null)
-            throw new ValidationException("The credit card provided is invalid.");
-
-        if (CreditCards.Any(cc => cc.Equals(creditCard)))
-            throw new CreditCardAlreadyExistsException("Credit card already exists.");
-
-        _creditCards.Add(creditCard);
-
-        AddDomainEvent(new CreditCardAddedDomainEvent(creditCard.Id, Id));
-    }
-
-    public void RemoveCreditCard(CreditCard creditCard)
-    {
-        if (creditCard == null)
-            throw new ValidationException("The credit card provided is invalid.");
-
-        if (!CreditCards.Any(cc => cc.Id == creditCard.Id))
-            return;
-
-        if (ActiveSignature?.PaymentMethod.CreditCardId == creditCard.Id)
-            throw new CreditCardLinkedToActiveSignatureException("Cannot remove credit card linked to an active signature.");
-
-        var creditCardToRemove = _creditCards.First(cc => cc.Id == creditCard.Id);
-        creditCardToRemove.Delete();
-
-        AddDomainEvent(new CreditCardRemovedDomainEvent(creditCard.Id, Id));
-    }
-
     public void UpdatePaymentMethodSignature(PaymentMethod paymentMethod)
     {
         if (ActiveSignature == null)
             throw new ValidationException("No active signature found.");
-
-        if (paymentMethod.CreditCardId != null && !CreditCards.Any(cc => cc.Id == paymentMethod.CreditCardId))
-            throw new ValidationException("Credit card not found.");
 
         ActiveSignature.UpdatePaymentMethod(paymentMethod);
 
