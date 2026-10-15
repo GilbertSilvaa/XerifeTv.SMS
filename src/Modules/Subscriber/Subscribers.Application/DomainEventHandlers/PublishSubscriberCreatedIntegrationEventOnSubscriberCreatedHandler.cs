@@ -17,7 +17,11 @@ internal sealed class PublishSubscriberCreatedIntegrationEventOnSubscriberCreate
 
     public async Task Handle(DomainEventNotification<SubscriberCreatedDomainEvent> notification, CancellationToken cancellationToken)
     {
-        var integrationEvent = new SubscriberCreatedIntegrationEvent(notification.DomainEvent.Email, notification.DomainEvent.UserName);
+        var integrationEvent = new SubscriberCreatedIntegrationEvent(
+            notification.DomainEvent.Id, 
+            notification.DomainEvent.Email, 
+            notification.DomainEvent.UserName);
+
         await _publisher.PublishAsync(integrationEvent, integrationEvent.EventName, cancellationToken);
     }
 }

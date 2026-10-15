@@ -173,6 +173,17 @@ namespace Subscribers.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.ComplexProperty<Dictionary<string, object>>("PaymentMethod", "Subscribers.Domain.Entities.Signature.PaymentMethod#PaymentMethod", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<Guid?>("CreditCardId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("integer");
+                        });
+
                     b.ComplexProperty<Dictionary<string, object>>("Plan", "Subscribers.Domain.Entities.Signature.Plan#PlanSnapshot", b1 =>
                         {
                             b1.IsRequired();

@@ -5,6 +5,9 @@ using Identity.Infrastructure;
 using IntegrationEventConsumer.Worker;
 using Notifications.Application;
 using Notifications.Infrastructure;
+using Payments.Application;
+using Payments.Infrastructure;
+using Payments.Infrastructure.PaymentGateway.Stripe;
 using Subscribers.Application;
 using Subscribers.Infrastructure;
 
@@ -17,12 +20,16 @@ builder.Services
         .AddModuleIdentityInfrastructure(builder.Configuration)
         .AddModuleIdentityApplication()
         .AddModuleNotificationInfrastructure(builder.Configuration)
-        .AddModuleNotificationApplication();
+        .AddModuleNotificationApplication()
+        .AddModulePaymentsInfrastructure(builder.Configuration)
+        .AddModulePaymentApplication();
 
 var options = new RabbitMQConnectionOptions();
 builder.Configuration
        .GetSection(RabbitMQConnectionOptions.SectionName)
        .Bind(options);
+
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection(StripeOptions.SectionName));
 
 builder.AddWolverineRabbitMQConsumerConfiguration(options);
 

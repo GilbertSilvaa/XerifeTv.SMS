@@ -24,6 +24,12 @@ public class SignatureConfiguration : IEntityTypeConfiguration<Signature>
             plan.ComplexProperty(p => p.Price).IsRequired();
         });
 
+        builder.ComplexProperty(x => x.PaymentMethod, paymentMethod =>
+        {
+            paymentMethod.Property(pm => pm.Type).IsRequired();
+            paymentMethod.Property(pm => pm.CreditCardId);
+        });
+
         builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.StartDate);
         builder.Property(x => x.EndDate);

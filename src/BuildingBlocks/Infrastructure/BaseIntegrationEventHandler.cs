@@ -6,10 +6,10 @@ using SharedKernel;
 
 namespace BuildingBlocks.Infrastructure;
 
-public abstract class BaseIntegrationEventHandler<TIntegrationEvent, TAggregateRoot> 
+public abstract class BaseIntegrationEventHandler<TIntegrationEvent, TAggregateRoot>
     : IIntegrationEventHandler<TIntegrationEvent>
     where TIntegrationEvent : IntegrationEvent
-    where TAggregateRoot: AggregateRoot
+    where TAggregateRoot : AggregateRoot
 {
     private readonly IInboxRepository<TAggregateRoot> _inboxRepository;
     private readonly IUnitOfWork<TAggregateRoot> _unitOfWork;
@@ -20,7 +20,7 @@ public abstract class BaseIntegrationEventHandler<TIntegrationEvent, TAggregateR
     {
         _inboxRepository = inboxRepository;
         _unitOfWork = unitOfWork;
-    } 
+    }
 
     public async virtual Task Handle(TIntegrationEvent notification, CancellationToken cancellationToken)
     {
@@ -50,6 +50,8 @@ public abstract class BaseIntegrationEventHandler<TIntegrationEvent, TAggregateR
             try
             {
                 inboxMessage.MarkAsFailed(ex.Message);
+
+                await _inboxRepository.AddOrUpdateAsync(inboxMessage);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex2) when (ex2 is InboxUniqueConstraintViolationException or DbUpdateConcurrencyException)
@@ -58,7 +60,7 @@ public abstract class BaseIntegrationEventHandler<TIntegrationEvent, TAggregateR
             }
 
             throw;
-        }     
+        }
     }
 
     public abstract Task Execute(TIntegrationEvent notification, CancellationToken cancellationToken);
