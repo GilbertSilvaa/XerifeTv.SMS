@@ -14,8 +14,4 @@
 	  <InternalsVisibleTo Include="Payments.Application.Tests" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Commands\" />
-  </ItemGroup>
-
 </Project>

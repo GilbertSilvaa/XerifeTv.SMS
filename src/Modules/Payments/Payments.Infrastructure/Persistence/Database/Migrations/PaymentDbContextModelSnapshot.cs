@@ -165,6 +165,9 @@ namespace Payments.Infrastructure.Persistence.Database.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("IdentityId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -179,7 +182,48 @@ namespace Payments.Infrastructure.Persistence.Database.Migrations
                     b.HasIndex("ExternalId")
                         .IsUnique();
 
+                    b.HasIndex("IdentityId")
+                        .IsUnique();
+
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("Payments.Domain.PaymentSetup.PaymentSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentSetup");
                 });
 
             modelBuilder.Entity("Payments.Domain.Customer.CreditCard", b =>

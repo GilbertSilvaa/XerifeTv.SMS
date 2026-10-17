@@ -8,4 +8,10 @@ namespace Payments.Infrastructure.Persistence.Repositories;
 public sealed class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
 {
     public CustomerRepository(PaymentDbContext dbContext) : base(dbContext) { }
+
+    public async Task<Customer?> GetByIdentityIdAsync(Guid identityId)
+    {
+        return await _dataSet
+            .SingleOrDefaultAsync(e => e.IdentityId == identityId && !e.IsDeleted);
+    }
 }

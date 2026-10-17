@@ -3,6 +3,10 @@ using Identity.API;
 using Identity.Application;
 using Identity.Infrastructure;
 using Microsoft.OpenApi.Models;
+using Payments.API;
+using Payments.Application;
+using Payments.Infrastructure;
+using Payments.Infrastructure.PaymentGateway.Stripe;
 using Plans.API;
 using Plans.Application;
 using Plans.Infrastructure;
@@ -16,6 +20,8 @@ internal class Program
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection(StripeOptions.SectionName));
 
         builder.Services.AddProblemDetails(opts =>
         {
@@ -40,7 +46,9 @@ internal class Program
             .AddModuleIdentityInfrastructure(builder.Configuration)
             .AddModuleIdentityApplication()
             .AddModuleSubscriberInfrastructure(builder.Configuration)
-            .AddModuleSubscriberApplication();
+            .AddModuleSubscriberApplication()
+            .AddModulePaymentsInfrastructure(builder.Configuration)
+            .AddModulePaymentApplication();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -80,6 +88,7 @@ internal class Program
         app.MapPlansEndpoints();
         app.MapIdentityEndpoints();
         app.MapSubscribersEndpoints();
+        app.MapPaymentsEndpoints();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

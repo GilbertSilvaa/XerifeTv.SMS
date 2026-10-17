@@ -2,4 +2,7 @@
 
 namespace Payments.Domain.Customer;
 
-public interface ICustomerRepository : IRepository<Customer>;
+public interface ICustomerRepository : IRepository<Customer>
+{
+    Task<Customer?> GetByIdentityIdAsync(Guid identityId);
+}

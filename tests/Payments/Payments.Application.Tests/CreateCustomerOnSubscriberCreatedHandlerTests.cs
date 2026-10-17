@@ -36,7 +36,7 @@ public class CreateCustomerOnSubscriberCreatedHandlerTests
     public async Task Should_CreateCustomer_When_SubscriberCreatedEventReceived()
     {
         // Arrange
-        var @event = new SubscriberCreatedIntegrationEvent(Guid.NewGuid(), "test@example.com", "TestUser");
+        var @event = new SubscriberCreatedIntegrationEvent(Guid.NewGuid(), "test@example.com", "TestUser", Guid.NewGuid());
         var gatewayCustomerId = Guid.CreateVersion7().ToString();
 
         _paymentGatewayMock
@@ -60,7 +60,7 @@ public class CreateCustomerOnSubscriberCreatedHandlerTests
     public async Task Should_NotPersistCustomer_When_PaymentGatewayFails()
     {
         // Arrange
-        var @event = new SubscriberCreatedIntegrationEvent(Guid.NewGuid(), "test@example.com", "TestUser");
+        var @event = new SubscriberCreatedIntegrationEvent(Guid.NewGuid(), "test@example.com", "TestUser", Guid.NewGuid());
 
         _paymentGatewayMock
             .Setup(pg => pg.CreateCustomerAsync(It.IsAny<CreateCustomerRequest>()))

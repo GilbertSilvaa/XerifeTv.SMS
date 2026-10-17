@@ -209,18 +209,13 @@ public class BaseIntegrationEventHandlerTests
     }
 
     [Fact]
-    public async Task Should_MarkAsFailedAndRethrow_And_NeverExecute_When_InitialInsertThrowsUnexpectedException()
+    public async Task Should_Rethrow_And_NotExecuteHandler_When_InitialInsertThrowsUnexpectedException()
     {
         // Arrange
         var repositoryException = new InvalidOperationException("insert failed");
-
         _inboxRepositoryMock
             .Setup(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()))
             .ThrowsAsync(repositoryException);
-
-        _unitOfWorkMock
-            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
 
         var @event = new FakeIntegrationEvent("John", Guid.NewGuid());
         var sut = new FakeIntegrationEventHandler(_inboxRepositoryMock.Object, _unitOfWorkMock.Object);
@@ -233,7 +228,8 @@ public class BaseIntegrationEventHandlerTests
         thrown.Which.Should().BeSameAs(repositoryException);
 
         sut.Executed.Should().BeFalse();
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _inboxRepositoryMock.Verify(r => r.AddOrUpdateAsync(It.IsAny<InboxMessage>()), Times.Exactly(2));
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

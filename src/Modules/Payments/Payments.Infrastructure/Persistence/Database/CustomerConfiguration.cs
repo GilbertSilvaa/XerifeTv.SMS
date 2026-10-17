@@ -13,6 +13,8 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.SubscriberId).IsRequired().ValueGeneratedNever();
         builder.Property(x => x.ExternalId).IsRequired();
         builder.HasIndex(x => x.ExternalId).IsUnique();
+        builder.Property(x => x.IdentityId).IsRequired().ValueGeneratedNever();
+        builder.HasIndex(x => x.IdentityId).IsUnique();
 
         builder.HasMany(x => x.CreditCards)
             .WithOne()

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -19,6 +19,9 @@
     <ProjectReference Include="..\BuildingBlocks\BuildingBlocks.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Payments\Payments.API\Payments.API.csproj" />
+    <ProjectReference Include="..\Modules\Payments\Payments.Application\Payments.Application.csproj" />
+    <ProjectReference Include="..\Modules\Payments\Payments.Infrastructure\Payments.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Plans\Plans.API\Plans.API.csproj" />
     <ProjectReference Include="..\Modules\Plans\Plans.Application\Plans.Application.csproj" />
     <ProjectReference Include="..\Modules\Plans\Plans.Infrastructure\Plans.Infrastructure.csproj" />

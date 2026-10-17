@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payments.Application.Abstractions;
 using Payments.Domain.Customer;
+using Payments.Domain.PaymentSetup;
 using Payments.Infrastructure.PaymentGateway.Stripe;
 using Payments.Infrastructure.Persistence;
 using Payments.Infrastructure.Persistence.Database;
@@ -30,6 +31,8 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IUnitOfWork<Customer>, PaymentUnitOfWorks.CustomerUnitOfWork>();
+        services.AddScoped<IPaymentSetupRepository, PaymentSetupRepository>();
+        services.AddScoped<IUnitOfWork<PaymentSetup>, PaymentUnitOfWorks.PaymentSetupUnitOfWork>();
 
         services.AddScoped<IPaymentGateway, StripePaymentGateway>();
 

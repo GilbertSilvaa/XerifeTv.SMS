@@ -30,7 +30,7 @@ internal sealed class CreateCustomerOnSubscriberCreatedHandler : BaseIntegration
             Email = notification.Email
         });
 
-        var customer = new Customer(notification.Id, response.Id);
+        var customer = new Customer(notification.Id, notification.IdentityId, response.Id);
         await _repository.AddOrUpdateAsync(customer);
     }
 }

@@ -8,20 +8,25 @@ namespace Payments.Domain.Customer;
 public sealed class Customer : AggregateRoot
 {
     public Guid SubscriberId { get; private set; }
+    public Guid IdentityId { get; private set; }
     public string ExternalId { get; private set; } = default!;
     public IReadOnlyList<CreditCard> CreditCards => _creditCards;
     private readonly List<CreditCard> _creditCards = [];
 
-    public Customer(Guid subscriberId, string externalId)
+    public Customer(Guid subscriberId, Guid identityId, string externalId)
     {
         if (subscriberId == Guid.Empty)
             throw new ArgumentException("Subscriber ID cannot be empty.", nameof(subscriberId));
+
+        if (identityId == Guid.Empty)
+            throw new ArgumentException("Identity ID cannot be empty.", nameof(identityId));
 
         if (string.IsNullOrEmpty(externalId))
             throw new ArgumentException("External ID cannot be null or empty.", nameof(externalId));
 
         SubscriberId = subscriberId;
         ExternalId = externalId;
+        IdentityId = identityId;
     }
 
     public void AddCreditCard(CreditCard creditCard)

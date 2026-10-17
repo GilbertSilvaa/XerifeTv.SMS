@@ -10,7 +10,7 @@ namespace Payments.Domain.Tests;
 public class CustomerTests
 {
     private static Customer.Customer CreateCustomer() =>
-        new(Guid.NewGuid(), "external_id_test");
+        new(Guid.NewGuid(), Guid.NewGuid(), "external_id_test");
 
     private static CreditCard CreateCreditCard(
         string last4Digits = "1111",
@@ -29,7 +29,7 @@ public class CustomerTests
         var subscriberId = Guid.NewGuid();
 
         // Act
-        var customer = new Customer.Customer(subscriberId, "external_id_test");
+        var customer = new Customer.Customer(subscriberId, Guid.NewGuid(), "external_id_test");
 
         // Assert
         customer.SubscriberId.Should().Be(subscriberId);
@@ -42,12 +42,24 @@ public class CustomerTests
     public void Should_ThrowArgumentException_When_SubscriberIdIsEmpty()
     {
         // Arrange & Act
-        var act = () => new Customer.Customer(Guid.Empty, "external_id_test");
+        var act = () => new Customer.Customer(Guid.Empty, Guid.NewGuid(), "external_id_test");
 
         // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("Subscriber ID cannot be empty.*")
             .And.ParamName.Should().Be("subscriberId");
+    }
+
+    [Fact]
+    public void Should_ThrowArgumentException_When_IdentityIdIsEmpty()
+    {
+        // Arrange & Act
+        var act = () => new Customer.Customer(Guid.NewGuid(), Guid.Empty, "external_id_test");
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("Identity ID cannot be empty.*")
+            .And.ParamName.Should().Be("identityId");
     }
 
     [Theory]
@@ -56,7 +68,7 @@ public class CustomerTests
     public void Should_ThrowArgumentException_When_ExternalIdIsNullOrEmpty(string? externalId)
     {
         // Arrange & Act
-        var act = () => new Customer.Customer(Guid.NewGuid(), externalId!);
+        var act = () => new Customer.Customer(Guid.NewGuid(), Guid.NewGuid(), externalId!);
 
         // Assert
         act.Should().Throw<ArgumentException>()

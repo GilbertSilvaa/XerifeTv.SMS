@@ -42,7 +42,7 @@ public sealed class Subscriber : AggregateRoot
 
         var subscriber = new Subscriber(userName, email, identityUserId);
 
-        subscriber.AddDomainEvent(new SubscriberCreatedDomainEvent(subscriber.Id, subscriber.Email, userName));
+        subscriber.AddDomainEvent(new SubscriberCreatedDomainEvent(subscriber.Id, subscriber.Email, userName, identityUserId));
 
         return subscriber;
     }
