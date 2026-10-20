@@ -9,6 +9,12 @@ public sealed class CustomerRepository : BaseRepository<Customer>, ICustomerRepo
 {
     public CustomerRepository(PaymentDbContext dbContext) : base(dbContext) { }
 
+    public async Task<Customer?> GetByExternalIdAsync(string externalId)
+    {
+        return await _dataSet
+            .SingleOrDefaultAsync(e => e.ExternalId == externalId && !e.IsDeleted);
+    }
+
     public async Task<Customer?> GetByIdentityIdAsync(Guid identityId)
     {
         return await _dataSet

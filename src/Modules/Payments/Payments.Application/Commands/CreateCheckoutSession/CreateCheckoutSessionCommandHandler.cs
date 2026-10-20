@@ -15,17 +15,20 @@ internal sealed class CreateCheckoutSessionCommandHandler
     private readonly IPaymentSetupRepository _paymentSetupRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IUnitOfWork<PaymentSetup> _unitOfWork;
+    private readonly TimeProvider _timeProvider;
 
     public CreateCheckoutSessionCommandHandler(
         IPaymentGateway paymentGateway,
         IPaymentSetupRepository paymentSetupRepository,
         ICustomerRepository customerRepository,
-        IUnitOfWork<PaymentSetup> unitOfWork)
+        IUnitOfWork<PaymentSetup> unitOfWork,
+        TimeProvider timeProvider)
     {
         _paymentGateway = paymentGateway;
         _paymentSetupRepository = paymentSetupRepository;
         _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
+        _timeProvider = timeProvider;
     }
 
     public async Task<Result<CreateCheckoutSessionResult>> Handle(CreateCheckoutSessionCommand request, CancellationToken cancellationToken)
@@ -34,20 +37,44 @@ internal sealed class CreateCheckoutSessionCommandHandler
         {
             var customer = await _customerRepository.GetByIdentityIdAsync(request.CustomerIdentityId);
 
-            if (customer == null)
+            if (customer is null)
                 return Result<CreateCheckoutSessionResult>.Failure(new("CreateCheckoutSession.CustomerNotFound", "Customer not found."));
 
-            var checkoutSession = await _paymentGateway.CreateCheckoutSessionAsync(new(customer.ExternalId));
+            var checkoutSession =
+                await TryReusePendingCheckoutSessionAsync(customer)
+                ?? await CreateCheckoutSessionAsync(customer, cancellationToken);
 
-            var paymentSetup = new PaymentSetup(checkoutSession.SessionId, checkoutSession.ExpiresAt, customer.Id);
-            await _paymentSetupRepository.AddOrUpdateAsync(paymentSetup);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            return Result<CreateCheckoutSessionResult>.Success(new(checkoutSession.CheckoutUrl, checkoutSession.ClientSecret));
+            return Result<CreateCheckoutSessionResult>.Success(checkoutSession);
         }
         catch (DomainException ex)
         {
             return Result<CreateCheckoutSessionResult>.Failure(new Error(ex.Code, ex.Message));
         }
+    }
+
+    private async Task<CreateCheckoutSessionResult?> TryReusePendingCheckoutSessionAsync(Customer customer)
+    {
+        var pendingPaymentSetup = await _paymentSetupRepository.GetPendingByCustomerIdAsync(customer.Id);
+
+        if (pendingPaymentSetup is null || !pendingPaymentSetup.CanBeReused(_timeProvider.GetUtcNow()))
+            return null;
+
+        var session = await _paymentGateway.GetCheckoutSessionBySessionIdAsync(pendingPaymentSetup.SessionId);
+
+        return session is null
+            ? null
+            : new CreateCheckoutSessionResult(session.CheckoutUrl, session.ClientSecret);
+    }
+
+    private async Task<CreateCheckoutSessionResult> CreateCheckoutSessionAsync(Customer customer, CancellationToken cancellationToken)
+    {
+        var session = await _paymentGateway.CreateCheckoutSessionAsync(new(customer.ExternalId));
+
+        var paymentSetup = new PaymentSetup(session.SessionId, session.ExpiresAt, customer.Id);
+
+        await _paymentSetupRepository.AddOrUpdateAsync(paymentSetup);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new CreateCheckoutSessionResult(session.CheckoutUrl, session.ClientSecret);
     }
 }

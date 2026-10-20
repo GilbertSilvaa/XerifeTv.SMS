@@ -5,4 +5,5 @@ namespace Payments.Domain.PaymentSetup;
 public interface IPaymentSetupRepository : IRepository<PaymentSetup>
 {
     Task<PaymentSetup?> GetBySessionIdAsync(string sessionId);
+    Task<PaymentSetup?> GetPendingByCustomerIdAsync(Guid customerId);
 }

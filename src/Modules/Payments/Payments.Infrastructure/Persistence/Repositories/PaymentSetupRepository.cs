@@ -14,4 +14,12 @@ public sealed class PaymentSetupRepository : BaseRepository<PaymentSetup>, IPaym
         return await _dataSet
             .SingleOrDefaultAsync(e => e.SessionId == sessionId && !e.IsDeleted);
     }
+
+    public async Task<PaymentSetup?> GetPendingByCustomerIdAsync(Guid customerId)
+    {
+        return await _dataSet
+            .Where(e => e.CustomerId == customerId && e.Status == EPaymentSetupStatus.PENDING && !e.IsDeleted)
+            .OrderByDescending(e => e.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
 }

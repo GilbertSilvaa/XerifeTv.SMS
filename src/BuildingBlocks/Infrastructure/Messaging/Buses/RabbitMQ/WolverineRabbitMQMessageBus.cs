@@ -55,7 +55,7 @@ public static class WolverineRabbitMQMessageBusExtensions
                 rabbit.UserName = configuration.UserName;
                 rabbit.Password = configuration.Password;
                 rabbit.VirtualHost = configuration.VirtualHost;
-            })  
+            })
             .AutoProvision();
 
             opts.PublishAllMessages()
@@ -98,6 +98,9 @@ public static class WolverineRabbitMQMessageBusExtensions
 
                     exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.subscriber.#")
                             .ToQueue($"subscriber.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
+
+                    exchange.BindTopic($"{MessagingConstants.INTEGRATION_EVENTS_TOPIC}.payment.#")
+                            .ToQueue($"payment.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}");
                 });
 
             opts.ListenToRabbitQueue($"identity.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}")
@@ -109,6 +112,10 @@ public static class WolverineRabbitMQMessageBusExtensions
                 .ListenerCount(3);
 
             opts.ListenToRabbitQueue($"subscriber.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}")
+                .PreFetchCount((ushort)MessagingConstants.MAX_MESSAGES_PER_BATCH)
+                .ListenerCount(3);
+
+            opts.ListenToRabbitQueue($"payment.{MessagingConstants.INTEGRATION_EVENTS_TOPIC}")
                 .PreFetchCount((ushort)MessagingConstants.MAX_MESSAGES_PER_BATCH)
                 .ListenerCount(3);
 

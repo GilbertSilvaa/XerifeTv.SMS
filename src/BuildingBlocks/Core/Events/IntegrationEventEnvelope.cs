@@ -15,6 +15,8 @@ public sealed class IntegrationEventEnvelope : INotification
 
     public static IntegrationEventEnvelope MapFromIntegrationEvent<T>(T @event) where T : IntegrationEvent
     {
+        string payload = JsonSerializer.Serialize(@event, @event.GetType());
+
         return new()
         {
             EventId = @event.EventId,
@@ -22,7 +24,7 @@ public sealed class IntegrationEventEnvelope : INotification
             EventName = @event.EventName,
             Version = @event.Version,
             OccurredAOn = @event.OccurredOn,
-            Payload = JsonSerializer.Serialize(@event)
+            Payload = payload
         };
     }
 }

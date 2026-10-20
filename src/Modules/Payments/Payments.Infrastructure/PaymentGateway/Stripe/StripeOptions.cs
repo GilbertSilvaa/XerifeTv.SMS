@@ -7,4 +7,5 @@ public sealed class StripeOptions
     public string ApiKey { get; set; } = string.Empty;
     public string CheckoutSessionSuccessUrl { get; set; } = string.Empty;
     public string CheckoutSessionCancelUrl { get; set; } = string.Empty;
+    public string WebhookSecret { get; set; } = string.Empty;
 }

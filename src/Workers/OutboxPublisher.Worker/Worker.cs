@@ -1,5 +1,6 @@
 using BuildingBlocks.Core.Messaging;
 using Identity.Infrastructure;
+using Payments.Domain.PaymentSetup;
 using Plans.Domain;
 using Subscribers.Domain.Entities;
 
@@ -23,11 +24,13 @@ public class Worker : BackgroundService
             var planOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<Plan>>();
             var subscriberOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<Subscriber>>();
             var identityOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<UserIdentityAggregateRoot>>();
+            var paymentOutboxMessageDispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher<PaymentSetup>>();
 
             await Task.WhenAll([
                 planOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken),
                 subscriberOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken),
-                identityOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken)
+                identityOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken),
+                paymentOutboxMessageDispatcher.DispatchAsync(MAX_RETRY_PUBLISH_MESSAGE, stoppingToken)
                 ]);
 
             await Task.Delay(millisecondsDelay: 2000, stoppingToken);

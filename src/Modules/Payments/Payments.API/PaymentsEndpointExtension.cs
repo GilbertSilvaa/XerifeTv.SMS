@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using Payments.API.Models.Response;
 using Payments.Application.Commands.CreateCheckoutSession;
+using Payments.Application.Commands.ProcessPaymentGatewayEvent;
+using Payments.Infrastructure.PaymentGateway.Stripe;
+using Stripe;
+using System.Security.Claims;
 
 namespace Payments.API;
 
@@ -29,7 +33,7 @@ public static class PaymentsEndpointExtension
             if (response.IsFailure)
                 return Results.BadRequest(response.Error.Description);
 
-            var result = new CreateCheckoutSessionResponse(
+            var result = new CreatePaymentCheckoutSessionResponse(
                 response.Data!.CheckoutSessionUrl,
                 response.Data!.ClientSecret);
 
@@ -39,9 +43,43 @@ public static class PaymentsEndpointExtension
         .WithTags("Payments")
         .WithSummary("Creates a checkout session for the authenticated user")
         .WithDescription("Endpoint intended to create a checkout session for the authenticated user")
-        .Produces<CreateCheckoutSessionResponse>(StatusCodes.Status200OK)
+        .Produces<CreatePaymentCheckoutSessionResponse>(StatusCodes.Status200OK)
         .Produces<string>(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/webhook/stripe", [AllowAnonymous]
+        async (
+            IMediator mediator,
+            IOptions<StripeOptions> stripeOptions,
+            HttpRequest request) =>
+        {
+            using var reader = new StreamReader(request.Body);
+            var json = await reader.ReadToEndAsync();
+            var signature = request.Headers["Stripe-Signature"];
+
+            Event stripeEvent;
+
+            try
+            {
+                string webhookSecret = stripeOptions.Value.WebhookSecret;
+                stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret, throwOnApiVersionMismatch: false);
+            }
+            catch (StripeException)
+            {
+                return Results.BadRequest();
+            }
+
+            var command = new ProcessPaymentGatewayEventCommand(stripeEvent.Id, stripeEvent.Type, json);
+            _ = await mediator.Send(command);
+
+            return Results.Ok();
+        })
+        .WithName("ProcessStripeWebhook")
+        .WithTags("Payments")
+        .WithSummary("Receives and processes Stripe webhook events")
+        .WithDescription("Endpoint called by Stripe. Authenticity is verified through the Stripe-Signature header, not through user authentication")
+        .Produces(StatusCodes.Status200OK)
+        .Produces<string>(StatusCodes.Status400BadRequest);
 
         return endpoints;
     }
